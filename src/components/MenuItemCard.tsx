@@ -1,13 +1,16 @@
 import { MenuItem } from '@/types/restaurant';
-import { Plus } from 'lucide-react';
+import { Plus, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MenuItemCardProps {
   item: MenuItem;
   onAdd: (item: MenuItem) => void;
+  showExtrasIndicator?: boolean;
 }
 
-export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
+export function MenuItemCard({ item, onAdd, showExtrasIndicator }: MenuItemCardProps) {
+  const hasExtrasOrObs = item.extras?.length || item.observations?.length;
+
   return (
     <button
       onClick={() => onAdd(item)}
@@ -19,9 +22,14 @@ export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
       )}
     >
       <div className="flex-1 min-w-0 mr-3">
-        <h3 className="font-semibold text-foreground text-base leading-tight">
-          {item.name}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-foreground text-base leading-tight">
+            {item.name}
+          </h3>
+          {showExtrasIndicator && hasExtrasOrObs && (
+            <Settings2 size={14} className="text-primary flex-shrink-0" />
+          )}
+        </div>
         {item.description && (
           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {item.description}

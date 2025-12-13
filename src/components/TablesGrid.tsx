@@ -1,13 +1,12 @@
-import { Table, Order } from '@/types/restaurant';
+import { Table } from '@/types/restaurant';
 import { TableCard } from './TableCard';
 
 interface TablesGridProps {
   tables: Table[];
-  orders: Map<number, Order>;
   onTableClick: (table: Table) => void;
 }
 
-export function TablesGrid({ tables, orders, onTableClick }: TablesGridProps) {
+export function TablesGrid({ tables, onTableClick }: TablesGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3 p-4 pb-8 safe-bottom">
       {tables.map((table, index) => (
@@ -19,7 +18,6 @@ export function TablesGrid({ tables, orders, onTableClick }: TablesGridProps) {
           <TableCard
             table={table}
             onClick={onTableClick}
-            orderTotal={orders.get(table.id)?.total}
           />
         </div>
       ))}
