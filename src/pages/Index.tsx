@@ -11,7 +11,11 @@ import { TransferComandasModal } from '@/components/TransferComandasModal';
 import { MenuSearchModal } from '@/components/MenuSearchModal';
 import { useToast } from '@/hooks/use-toast';
 
-const Index = () => {
+interface IndexProps {
+  attendantName?: string;
+}
+
+const Index = ({ attendantName }: IndexProps) => {
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [activeFilter, setActiveFilter] = useState<TableStatus | 'all'>('all');
