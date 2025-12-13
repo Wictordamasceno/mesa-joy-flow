@@ -62,6 +62,7 @@ export default {
           available: "hsl(var(--table-available))",
           occupied: "hsl(var(--table-occupied))",
           billing: "hsl(var(--table-billing))",
+          reserved: "hsl(var(--table-reserved))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
