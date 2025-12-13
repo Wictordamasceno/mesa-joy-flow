@@ -12,26 +12,27 @@ export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
     <button
       onClick={() => onAdd(item)}
       className={cn(
-        'flex items-center justify-between p-4 rounded-xl',
+        'flex items-center justify-between p-4 rounded-2xl w-full',
         'bg-card border border-border',
-        'hover:border-primary/50 hover:bg-secondary',
-        'transition-all duration-200 touch-action-manipulation',
-        'active:scale-[0.98] text-left w-full'
+        'transition-all duration-150 touch-manipulation active-scale',
+        'text-left touch-target'
       )}
     >
-      <div className="flex-1 min-w-0 mr-4">
-        <h3 className="font-semibold text-foreground truncate">{item.name}</h3>
+      <div className="flex-1 min-w-0 mr-3">
+        <h3 className="font-semibold text-foreground text-base leading-tight">
+          {item.name}
+        </h3>
         {item.description && (
-          <p className="text-sm text-muted-foreground truncate mt-0.5">
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {item.description}
           </p>
         )}
-        <span className="text-primary font-bold mt-1 block">
+        <span className="text-primary font-bold text-lg mt-2 block">
           R$ {item.price.toFixed(2)}
         </span>
       </div>
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-        <Plus size={20} />
+      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
+        <Plus size={24} strokeWidth={2.5} />
       </div>
     </button>
   );

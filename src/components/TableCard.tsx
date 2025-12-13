@@ -11,18 +11,21 @@ interface TableCardProps {
 const statusConfig = {
   available: {
     label: 'Disponível',
-    bgClass: 'border-table-available/50 hover:border-table-available',
+    bgClass: 'border-table-available/60 bg-table-available/10',
     dotClass: 'bg-table-available',
+    textClass: 'text-table-available',
   },
   occupied: {
     label: 'Ocupada',
-    bgClass: 'border-table-occupied/50 hover:border-table-occupied',
+    bgClass: 'border-table-occupied/60 bg-table-occupied/10',
     dotClass: 'bg-table-occupied animate-pulse-soft',
+    textClass: 'text-table-occupied',
   },
   billing: {
     label: 'Conta',
-    bgClass: 'border-table-billing/50 hover:border-table-billing',
+    bgClass: 'border-table-billing/60 bg-table-billing/10',
     dotClass: 'bg-table-billing animate-pulse-soft',
+    textClass: 'text-table-billing',
   },
 };
 
@@ -32,9 +35,9 @@ function formatDuration(openedAt?: Date): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hours > 0) {
-    return `${hours}h ${mins}m`;
+    return `${hours}h${mins}m`;
   }
-  return `${mins}m`;
+  return `${mins}min`;
 }
 
 export function TableCard({ table, onClick, orderTotal }: TableCardProps) {
@@ -44,43 +47,51 @@ export function TableCard({ table, onClick, orderTotal }: TableCardProps) {
     <button
       onClick={() => onClick(table)}
       className={cn(
-        'relative flex flex-col items-center justify-center p-4 rounded-xl',
-        'bg-card border-2 transition-all duration-200',
-        'hover:bg-secondary hover:scale-[1.02] active:scale-[0.98]',
-        'touch-action-manipulation min-h-[140px]',
+        'relative flex flex-col items-center justify-center',
+        'p-4 rounded-2xl border-2',
+        'transition-all duration-150 touch-manipulation active-scale',
+        'min-h-[120px] w-full',
         config.bgClass
       )}
     >
-      {/* Status dot */}
-      <div className={cn('absolute top-3 right-3 w-3 h-3 rounded-full', config.dotClass)} />
+      {/* Status indicator */}
+      <div className={cn(
+        'absolute top-3 right-3 w-3 h-3 rounded-full',
+        config.dotClass
+      )} />
 
-      {/* Table number */}
-      <span className="text-3xl font-bold text-foreground mb-1">
+      {/* Table number - large and prominent */}
+      <span className="text-4xl font-bold text-foreground mb-1">
         {table.number}
       </span>
       
-      {/* Seats */}
-      <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
+      {/* Seats info */}
+      <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
         <Users size={14} />
-        <span>{table.seats}</span>
+        <span className="text-sm">{table.seats} lugares</span>
       </div>
 
-      {/* Status label */}
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        {config.label}
-      </span>
-
-      {/* Duration and total for occupied tables */}
-      {table.status !== 'available' && table.openedAt && (
-        <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-          <Clock size={12} />
-          <span>{formatDuration(table.openedAt)}</span>
+      {/* Status and time for non-available */}
+      {table.status !== 'available' ? (
+        <div className="flex flex-col items-center gap-1">
+          <span className={cn('text-xs font-semibold uppercase', config.textClass)}>
+            {config.label}
+          </span>
+          {table.openedAt && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock size={10} />
+              <span>{formatDuration(table.openedAt)}</span>
+            </div>
+          )}
+          {orderTotal !== undefined && orderTotal > 0 && (
+            <span className="text-sm font-bold text-primary mt-1">
+              R$ {orderTotal.toFixed(2)}
+            </span>
+          )}
         </div>
-      )}
-
-      {orderTotal !== undefined && orderTotal > 0 && (
-        <span className="mt-1 text-sm font-semibold text-primary">
-          R$ {orderTotal.toFixed(2)}
+      ) : (
+        <span className={cn('text-xs font-semibold uppercase', config.textClass)}>
+          {config.label}
         </span>
       )}
     </button>

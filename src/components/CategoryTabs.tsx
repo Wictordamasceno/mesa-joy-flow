@@ -9,21 +9,21 @@ interface CategoryTabsProps {
 
 export function CategoryTabs({ categories, activeCategory, onCategoryChange }: CategoryTabsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1">
       {categories.map((category) => (
         <button
           key={category.id}
           onClick={() => onCategoryChange(category.id)}
           className={cn(
-            'flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap',
-            'transition-all duration-200 touch-action-manipulation',
-            'text-sm font-medium',
+            'flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap',
+            'transition-all duration-150 touch-manipulation active-scale',
+            'text-sm font-semibold touch-target',
             activeCategory === category.id
-              ? 'bg-primary text-primary-foreground shadow-lg'
-              : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              ? 'bg-primary text-primary-foreground shadow-lg glow-primary'
+              : 'bg-secondary text-secondary-foreground'
           )}
         >
-          <span className="text-lg">{category.icon}</span>
+          <span className="text-xl">{category.icon}</span>
           <span>{category.name}</span>
         </button>
       ))}

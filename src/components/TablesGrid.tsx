@@ -9,14 +9,19 @@ interface TablesGridProps {
 
 export function TablesGrid({ tables, orders, onTableClick }: TablesGridProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
-      {tables.map((table) => (
-        <TableCard
+    <div className="grid grid-cols-2 gap-3 p-4 pb-8 safe-bottom">
+      {tables.map((table, index) => (
+        <div 
           key={table.id}
-          table={table}
-          onClick={onTableClick}
-          orderTotal={orders.get(table.id)?.total}
-        />
+          className="animate-fade-in"
+          style={{ animationDelay: `${index * 30}ms` }}
+        >
+          <TableCard
+            table={table}
+            onClick={onTableClick}
+            orderTotal={orders.get(table.id)?.total}
+          />
+        </div>
       ))}
     </div>
   );
