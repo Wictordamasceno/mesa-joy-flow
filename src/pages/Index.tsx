@@ -189,7 +189,7 @@ const Index = () => {
     toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
   };
 
-  const handleAddItemToComanda = (item: MenuItem, extras: Extra[], observations: string[], quantity: number) => {
+  const handleAddItemToComanda = (item: MenuItem, extras: Extra[], observations: string, quantity: number) => {
     if (!selectedTable || !activeComanda) return;
 
     const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
@@ -198,7 +198,7 @@ const Index = () => {
       menuItem: item,
       quantity,
       selectedExtras: extras,
-      selectedObservations: observations,
+      selectedObservations: observations ? [observations] : [],
       status: 'pending' as const,
     };
 

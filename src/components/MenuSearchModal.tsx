@@ -8,7 +8,7 @@ import { X, Search } from 'lucide-react';
 
 interface MenuSearchModalProps {
   onClose: () => void;
-  onAddItem: (item: MenuItem, extras: Extra[], observations: string[], quantity: number) => void;
+  onAddItem: (item: MenuItem, extras: Extra[], observations: string, quantity: number) => void;
 }
 
 export function MenuSearchModal({ onClose, onAddItem }: MenuSearchModalProps) {
@@ -28,11 +28,11 @@ export function MenuSearchModal({ onClose, onAddItem }: MenuSearchModalProps) {
     if (item.extras?.length || item.observations?.length) {
       setSelectedItem(item);
     } else {
-      onAddItem(item, [], [], 1);
+      onAddItem(item, [], '', 1);
     }
   };
 
-  const handleExtrasConfirm = (extras: Extra[], observations: string[], quantity: number) => {
+  const handleExtrasConfirm = (extras: Extra[], observations: string, quantity: number) => {
     if (selectedItem) {
       onAddItem(selectedItem, extras, observations, quantity);
       setSelectedItem(null);
