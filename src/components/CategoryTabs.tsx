@@ -9,7 +9,7 @@ interface CategoryTabsProps {
 
 export function CategoryTabs({ categories, activeCategory, onCategoryChange }: CategoryTabsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 py-1 scroll-smooth touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
       {categories.map((category) => (
         <button
           key={category.id}

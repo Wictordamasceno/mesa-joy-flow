@@ -37,7 +37,7 @@ export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProp
         </div>
 
         {/* Filter pills */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1 scroll-smooth touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
           {(Object.keys(filterConfig) as Array<TableStatus | 'all'>).map((key) => {
             const config = filterConfig[key];
             const count = key === 'all' ? total : tableCounts[key];
