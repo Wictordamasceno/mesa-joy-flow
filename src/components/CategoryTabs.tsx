@@ -15,15 +15,15 @@ export function CategoryTabs({ categories, activeCategory, onCategoryChange }: C
           key={category.id}
           onClick={() => onCategoryChange(category.id)}
           className={cn(
-            'flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap',
+            'flex items-center gap-1.5 px-3 py-2.5 rounded-full whitespace-nowrap',
             'transition-all duration-150 touch-manipulation active-scale',
-            'text-sm font-semibold touch-target',
+            'text-xs font-semibold min-h-[40px]',
             activeCategory === category.id
-              ? 'bg-primary text-primary-foreground shadow-lg glow-primary'
+              ? 'bg-primary text-primary-foreground shadow-lg'
               : 'bg-secondary text-secondary-foreground'
           )}
         >
-          <span className="text-xl">{category.icon}</span>
+          <span className="text-base">{category.icon}</span>
           <span>{category.name}</span>
         </button>
       ))}

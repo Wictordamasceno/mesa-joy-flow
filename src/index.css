@@ -1,4 +1,9 @@
 @tailwind base;
+
+/* Reserved table color */
+:root {
+  --table-reserved: 180 100% 35%;
+}
 @tailwind components;
 @tailwind utilities;
 

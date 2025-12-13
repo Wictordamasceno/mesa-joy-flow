@@ -1,11 +1,10 @@
 import { Table } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Users, Clock } from 'lucide-react';
+import { Clock, FileText } from 'lucide-react';
 
 interface TableCardProps {
   table: Table;
   onClick: (table: Table) => void;
-  orderTotal?: number;
 }
 
 const statusConfig = {
@@ -27,11 +26,17 @@ const statusConfig = {
     dotClass: 'bg-table-billing animate-pulse-soft',
     textClass: 'text-table-billing',
   },
+  reserved: {
+    label: 'Reservada',
+    bgClass: 'border-table-reserved/60 bg-table-reserved/10',
+    dotClass: 'bg-table-reserved',
+    textClass: 'text-table-reserved',
+  },
 };
 
 function formatDuration(openedAt?: Date): string {
   if (!openedAt) return '';
-  const minutes = Math.floor((Date.now() - openedAt.getTime()) / 60000);
+  const minutes = Math.floor((Date.now() - new Date(openedAt).getTime()) / 60000);
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   if (hours > 0) {
@@ -40,8 +45,14 @@ function formatDuration(openedAt?: Date): string {
   return `${mins}min`;
 }
 
-export function TableCard({ table, onClick, orderTotal }: TableCardProps) {
+function getTableTotal(table: Table): number {
+  return table.comandas.reduce((sum, comanda) => sum + comanda.total, 0);
+}
+
+export function TableCard({ table, onClick }: TableCardProps) {
   const config = statusConfig[table.status];
+  const openComandas = table.comandas.filter(c => c.status !== 'closed').length;
+  const tableTotal = getTableTotal(table);
 
   return (
     <button
@@ -50,7 +61,7 @@ export function TableCard({ table, onClick, orderTotal }: TableCardProps) {
         'relative flex flex-col items-center justify-center',
         'p-4 rounded-2xl border-2',
         'transition-all duration-150 touch-manipulation active-scale',
-        'min-h-[120px] w-full',
+        'h-[140px] w-full',
         config.bgClass
       )}
     >
@@ -60,38 +71,43 @@ export function TableCard({ table, onClick, orderTotal }: TableCardProps) {
         config.dotClass
       )} />
 
-      {/* Table number - large and prominent */}
-      <span className="text-4xl font-bold text-foreground mb-1">
+      {/* Table number */}
+      <span className="text-4xl font-bold text-foreground mb-2">
         {table.number}
       </span>
       
-      {/* Seats info */}
-      <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
-        <Users size={14} />
-        <span className="text-sm">{table.seats} lugares</span>
-      </div>
+      {/* Comandas count for occupied/billing tables */}
+      {(table.status === 'occupied' || table.status === 'billing') && openComandas > 0 && (
+        <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
+          <FileText size={14} />
+          <span className="text-sm">{openComandas} comanda{openComandas > 1 ? 's' : ''}</span>
+        </div>
+      )}
 
-      {/* Status and time for non-available */}
-      {table.status !== 'available' ? (
-        <div className="flex flex-col items-center gap-1">
-          <span className={cn('text-xs font-semibold uppercase', config.textClass)}>
-            {config.label}
-          </span>
-          {table.openedAt && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock size={10} />
-              <span>{formatDuration(table.openedAt)}</span>
-            </div>
-          )}
-          {orderTotal !== undefined && orderTotal > 0 && (
-            <span className="text-sm font-bold text-primary mt-1">
-              R$ {orderTotal.toFixed(2)}
+      {/* Status label */}
+      <span className={cn('text-xs font-semibold uppercase', config.textClass)}>
+        {config.label}
+      </span>
+
+      {/* Duration and total for non-available */}
+      {(table.status === 'occupied' || table.status === 'billing') && table.openedAt && (
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Clock size={10} />
+            <span>{formatDuration(table.openedAt)}</span>
+          </div>
+          {tableTotal > 0 && (
+            <span className="text-sm font-bold text-primary">
+              R$ {tableTotal.toFixed(2)}
             </span>
           )}
         </div>
-      ) : (
-        <span className={cn('text-xs font-semibold uppercase', config.textClass)}>
-          {config.label}
+      )}
+
+      {/* Reserved info */}
+      {table.status === 'reserved' && table.reservedFor && (
+        <span className="text-xs text-muted-foreground mt-1 truncate max-w-full px-2">
+          {table.reservedFor}
         </span>
       )}
     </button>

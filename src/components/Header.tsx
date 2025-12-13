@@ -13,16 +13,17 @@ const filterConfig = {
   available: { label: 'Livres', color: 'bg-table-available' },
   occupied: { label: 'Ocupadas', color: 'bg-table-occupied' },
   billing: { label: 'Conta', color: 'bg-table-billing' },
+  reserved: { label: 'Reservadas', color: 'bg-table-reserved' },
 };
 
 export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProps) {
-  const total = tableCounts.available + tableCounts.occupied + tableCounts.billing;
+  const total = tableCounts.available + tableCounts.occupied + tableCounts.billing + tableCounts.reserved;
 
   return (
     <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border safe-top">
-      <div className="px-4 pt-2 pb-4">
+      <div className="px-4 pt-2 pb-3">
         {/* Top row */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-xl font-bold text-foreground">Mesas</h1>
             <p className="text-xs text-muted-foreground">
@@ -35,8 +36,8 @@ export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProp
           </div>
         </div>
 
-        {/* Filter pills - horizontal scroll */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+        {/* Filter pills */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
           {(Object.keys(filterConfig) as Array<TableStatus | 'all'>).map((key) => {
             const config = filterConfig[key];
             const count = key === 'all' ? total : tableCounts[key];
@@ -46,19 +47,19 @@ export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProp
                 key={key}
                 onClick={() => onFilterChange(key)}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap',
+                  'flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap',
                   'transition-all duration-200 touch-manipulation active-scale',
-                  'text-sm font-semibold touch-target',
+                  'text-xs font-semibold min-h-[36px]',
                   activeFilter === key
-                    ? 'bg-primary text-primary-foreground shadow-lg glow-primary'
-                    : 'bg-secondary text-secondary-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-lg'
+                    : 'bg-secondary/80 text-secondary-foreground'
                 )}
               >
-                <span className={cn('w-2.5 h-2.5 rounded-full', config.color)} />
+                <span className={cn('w-2 h-2 rounded-full flex-shrink-0', config.color)} />
                 <span>{config.label}</span>
                 <span className={cn(
-                  'px-2 py-0.5 rounded-full text-xs font-bold',
-                  activeFilter === key ? 'bg-primary-foreground/20' : 'bg-background/30'
+                  'px-1.5 py-0.5 rounded-full text-[10px] font-bold min-w-[20px] text-center',
+                  activeFilter === key ? 'bg-primary-foreground/20' : 'bg-background/50'
                 )}>
                   {count}
                 </span>
