@@ -3,16 +3,17 @@ import { MenuItem, Extra } from '@/types/restaurant';
 import { Button } from './ui/button';
 import { X, Check, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Textarea } from './ui/textarea';
 
 interface ExtrasModalProps {
   item: MenuItem;
   onClose: () => void;
-  onConfirm: (extras: Extra[], observations: string[], quantity: number) => void;
+  onConfirm: (extras: Extra[], observations: string, quantity: number) => void;
 }
 
 export function ExtrasModal({ item, onClose, onConfirm }: ExtrasModalProps) {
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
-  const [selectedObservations, setSelectedObservations] = useState<string[]>([]);
+  const [observations, setObservations] = useState('');
   const [quantity, setQuantity] = useState(1);
 
   const toggleExtra = (extra: Extra) => {
@@ -23,17 +24,12 @@ export function ExtrasModal({ item, onClose, onConfirm }: ExtrasModalProps) {
     );
   };
 
-  const toggleObservation = (obs: string) => {
-    setSelectedObservations(prev =>
-      prev.includes(obs) ? prev.filter(o => o !== obs) : [...prev, obs]
-    );
-  };
 
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price, 0);
   const itemTotal = (item.price + extrasTotal) * quantity;
 
   const handleConfirm = () => {
-    onConfirm(selectedExtras, selectedObservations, quantity);
+    onConfirm(selectedExtras, observations, quantity);
   };
 
   return (
@@ -115,27 +111,16 @@ export function ExtrasModal({ item, onClose, onConfirm }: ExtrasModalProps) {
           )}
 
           {/* Observações */}
-          {item.observations && item.observations.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-3">Observações</p>
-              <div className="flex flex-wrap gap-2">
-                {item.observations.map((obs) => (
-                  <button
-                    key={obs}
-                    onClick={() => toggleObservation(obs)}
-                    className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium transition-all touch-manipulation',
-                      selectedObservations.includes(obs)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground'
-                    )}
-                  >
-                    {obs}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-3">Observações</p>
+            <Textarea
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Ex: Sem cebola, bem passado, etc."
+              className="bg-secondary/50 border-border text-foreground placeholder:text-muted-foreground resize-none"
+              rows={3}
+            />
+          </div>
         </div>
 
         {/* Footer */}
