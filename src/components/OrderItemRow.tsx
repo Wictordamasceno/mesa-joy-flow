@@ -15,47 +15,68 @@ const statusColors = {
   delivered: 'bg-primary/20 text-primary',
 };
 
+const statusLabels = {
+  pending: 'Pendente',
+  preparing: 'Preparando',
+  ready: 'Pronto',
+  delivered: 'Entregue',
+};
+
 export function OrderItemRow({ item, onUpdateQuantity, onRemove }: OrderItemRowProps) {
   const subtotal = item.menuItem.price * item.quantity;
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 animate-fade-in">
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50 animate-fade-in">
       {/* Item info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h4 className="font-medium text-foreground truncate">{item.menuItem.name}</h4>
-          <span className={cn('text-xs px-2 py-0.5 rounded-full capitalize', statusColors[item.status])}>
-            {item.status === 'pending' ? 'Pendente' : 
-             item.status === 'preparing' ? 'Preparando' :
-             item.status === 'ready' ? 'Pronto' : 'Entregue'}
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="font-semibold text-foreground">{item.menuItem.name}</h4>
+          <span className={cn(
+            'text-[10px] px-2 py-0.5 rounded-full uppercase font-bold',
+            statusColors[item.status]
+          )}>
+            {statusLabels[item.status]}
           </span>
         </div>
-        <span className="text-sm text-muted-foreground">
-          R$ {item.menuItem.price.toFixed(2)} cada
-        </span>
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-sm text-muted-foreground">
+            R$ {item.menuItem.price.toFixed(2)} × {item.quantity}
+          </span>
+          <span className="font-bold text-primary">
+            R$ {subtotal.toFixed(2)}
+          </span>
+        </div>
       </div>
 
       {/* Quantity controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           onClick={() => item.quantity > 1 ? onUpdateQuantity(item.id, -1) : onRemove(item.id)}
-          className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+          className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center',
+            'touch-manipulation active-scale touch-target',
+            'bg-secondary text-muted-foreground',
+            'transition-colors',
+            item.quantity === 1 && 'bg-destructive/20 text-destructive'
+          )}
         >
-          {item.quantity === 1 ? <Trash2 size={16} /> : <Minus size={16} />}
+          {item.quantity === 1 ? <Trash2 size={18} /> : <Minus size={18} />}
         </button>
-        <span className="w-8 text-center font-semibold text-foreground">{item.quantity}</span>
+        <span className="w-8 text-center font-bold text-lg text-foreground">
+          {item.quantity}
+        </span>
         <button
           onClick={() => onUpdateQuantity(item.id, 1)}
-          className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+          className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center',
+            'touch-manipulation active-scale touch-target',
+            'bg-primary text-primary-foreground',
+            'transition-colors'
+          )}
         >
-          <Plus size={16} />
+          <Plus size={18} />
         </button>
       </div>
-
-      {/* Subtotal */}
-      <span className="w-24 text-right font-semibold text-foreground">
-        R$ {subtotal.toFixed(2)}
-      </span>
     </div>
   );
 }

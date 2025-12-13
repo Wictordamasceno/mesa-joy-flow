@@ -56,7 +56,7 @@ const Index = () => {
         onFilterChange={setActiveFilter}
       />
 
-      <main>
+      <main className="pb-20">
         <TablesGrid
           tables={filteredTables}
           orders={orders}

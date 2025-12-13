@@ -5,7 +5,7 @@ import { CategoryTabs } from './CategoryTabs';
 import { MenuItemCard } from './MenuItemCard';
 import { OrderItemRow } from './OrderItemRow';
 import { Button } from './ui/button';
-import { ArrowLeft, Send, Receipt, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, Receipt, CheckCircle, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,7 @@ interface OrderPanelProps {
 
 export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable }: OrderPanelProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const [showOrder, setShowOrder] = useState(false);
   const { toast } = useToast();
 
   const filteredItems = menuItems.filter((item) => item.category === activeCategory);
@@ -69,8 +70,8 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
     }
 
     toast({
-      title: 'Item adicionado',
-      description: `${menuItem.name} adicionado ao pedido`,
+      title: `+1 ${menuItem.name}`,
+      description: `R$ ${menuItem.price.toFixed(2)}`,
     });
   };
 
@@ -116,8 +117,8 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
     });
 
     toast({
-      title: 'Pedido enviado!',
-      description: 'O pedido foi enviado para a cozinha',
+      title: 'Enviado para cozinha!',
+      description: `${currentOrder.items.filter(i => i.status === 'pending').length} itens`,
     });
   };
 
@@ -132,8 +133,9 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
 
     toast({
       title: 'Conta solicitada',
-      description: `Mesa ${table.number} - Total: R$ ${currentOrder.total.toFixed(2)}`,
+      description: `R$ ${currentOrder.total.toFixed(2)}`,
     });
+    setShowOrder(false);
   };
 
   const closeTable = () => {
@@ -146,8 +148,8 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
     onUpdateTable({ ...table, status: 'available', openedAt: undefined });
 
     toast({
-      title: 'Mesa fechada',
-      description: `Mesa ${table.number} está disponível`,
+      title: 'Mesa liberada!',
+      description: `Mesa ${table.number} disponível`,
     });
 
     onClose();
@@ -155,90 +157,81 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
 
   const pendingItems = currentOrder.items.filter((item) => item.status === 'pending');
   const hasPendingItems = pendingItems.length > 0;
+  const itemCount = currentOrder.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex flex-col lg:flex-row animate-slide-in">
-      {/* Menu Section */}
-      <div className="flex-1 flex flex-col border-r border-border overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center gap-4 p-4 border-b border-border bg-card">
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <ArrowLeft size={24} />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Mesa {table.number}</h1>
-            <span className="text-sm text-muted-foreground">{table.seats} lugares</span>
-          </div>
-        </header>
-
-        {/* Categories */}
-        <div className="p-4 border-b border-border bg-card/50">
-          <CategoryTabs
-            categories={categories}
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-          />
+    <div className="fixed inset-0 bg-background z-50 flex flex-col animate-slide-up">
+      {/* Header */}
+      <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card safe-top">
+        <button
+          onClick={onClose}
+          className="w-10 h-10 rounded-xl flex items-center justify-center bg-secondary text-foreground touch-manipulation active-scale touch-target"
+        >
+          <ArrowLeft size={22} />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-xl font-bold text-foreground">Mesa {table.number}</h1>
+          <span className="text-sm text-muted-foreground">{table.seats} lugares</span>
         </div>
-
-        {/* Menu Items */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {filteredItems.map((item) => (
-              <MenuItemCard key={item.id} item={item} onAdd={addItem} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Order Section */}
-      <div className="w-full lg:w-[400px] flex flex-col bg-card border-t lg:border-t-0 border-border">
-        <header className="p-4 border-b border-border">
-          <h2 className="text-lg font-bold text-foreground">Pedido Atual</h2>
-          <span className="text-sm text-muted-foreground">
-            {currentOrder.items.length} {currentOrder.items.length === 1 ? 'item' : 'itens'}
-          </span>
-        </header>
-
-        {/* Order Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {currentOrder.items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Receipt size={48} className="mb-2 opacity-50" />
-              <p>Nenhum item no pedido</p>
-            </div>
-          ) : (
-            currentOrder.items.map((item) => (
-              <OrderItemRow
-                key={item.id}
-                item={item}
-                onUpdateQuantity={updateQuantity}
-                onRemove={removeItem}
-              />
-            ))
-          )}
-        </div>
-
-        {/* Order Footer */}
-        <div className="p-4 border-t border-border space-y-4">
-          {/* Total */}
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-medium text-muted-foreground">Total</span>
-            <span className="text-2xl font-bold text-primary">
-              R$ {currentOrder.total.toFixed(2)}
+        {currentOrder.items.length > 0 && (
+          <button
+            onClick={() => setShowOrder(!showOrder)}
+            className={cn(
+              'relative flex items-center gap-2 px-4 py-2.5 rounded-full',
+              'touch-manipulation active-scale touch-target font-semibold',
+              showOrder ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground'
+            )}
+          >
+            <ShoppingBag size={18} />
+            <span className="text-sm">R$ {currentOrder.total.toFixed(2)}</span>
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+              {itemCount}
             </span>
+          </button>
+        )}
+      </header>
+
+      {/* Content */}
+      {showOrder ? (
+        // Order view
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+            {currentOrder.items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                <Receipt size={64} className="mb-4 opacity-30" />
+                <p className="text-lg">Pedido vazio</p>
+                <p className="text-sm mt-1">Adicione itens do cardápio</p>
+              </div>
+            ) : (
+              currentOrder.items.map((item) => (
+                <OrderItemRow
+                  key={item.id}
+                  item={item}
+                  onUpdateQuantity={updateQuantity}
+                  onRemove={removeItem}
+                />
+              ))
+            )}
           </div>
 
-          {/* Actions */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Order actions */}
+          <div className="p-4 border-t border-border bg-card space-y-3 safe-bottom">
+            <div className="flex items-center justify-between">
+              <span className="text-lg text-muted-foreground">Total</span>
+              <span className="text-3xl font-bold text-primary">
+                R$ {currentOrder.total.toFixed(2)}
+              </span>
+            </div>
+
             {hasPendingItems && (
               <Button
                 variant="default"
                 size="touch"
                 onClick={sendToKitchen}
-                className="col-span-2"
+                className="w-full"
               >
-                <Send size={18} />
-                Enviar para Cozinha
+                <Send size={20} />
+                Enviar para Cozinha ({pendingItems.length})
               </Button>
             )}
 
@@ -247,9 +240,9 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
                 variant="warning"
                 size="touch"
                 onClick={requestBill}
-                className={cn(hasPendingItems ? 'col-span-1' : 'col-span-2')}
+                className="w-full"
               >
-                <Receipt size={18} />
+                <Receipt size={20} />
                 Fechar Conta
               </Button>
             )}
@@ -259,22 +252,55 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
                 variant="success"
                 size="touch"
                 onClick={closeTable}
-                className="col-span-2"
+                className="w-full"
               >
-                <CheckCircle size={18} />
-                Finalizar Mesa
-              </Button>
-            )}
-
-            {!hasPendingItems && currentOrder.items.length > 0 && currentOrder.status !== 'billing' && (
-              <Button variant="outline" size="touch" onClick={onClose}>
-                <X size={18} />
-                Voltar
+                <CheckCircle size={20} />
+                Finalizar e Liberar Mesa
               </Button>
             )}
           </div>
         </div>
-      </div>
+      ) : (
+        // Menu view
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Categories */}
+          <div className="px-4 py-3 border-b border-border bg-card/50">
+            <CategoryTabs
+              categories={categories}
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
+            />
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+            {filteredItems.map((item, index) => (
+              <div
+                key={item.id}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <MenuItemCard item={item} onAdd={addItem} />
+              </div>
+            ))}
+          </div>
+
+          {/* Quick order button when items exist */}
+          {currentOrder.items.length > 0 && hasPendingItems && (
+            <div className="p-4 border-t border-border bg-card safe-bottom">
+              <Button
+                variant="default"
+                size="touch"
+                onClick={sendToKitchen}
+                className="w-full"
+              >
+                <Send size={20} />
+                Enviar {pendingItems.length} {pendingItems.length === 1 ? 'item' : 'itens'} para Cozinha
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
