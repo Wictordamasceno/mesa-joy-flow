@@ -55,28 +55,17 @@ const Index = ({ attendantName }: IndexProps) => {
 
   const handleOpenTable = () => {
     if (!selectedTable) return;
-    const newComanda: Comanda = {
-      id: `comanda-${Date.now()}`,
-      tableId: selectedTable.id,
-      number: 1,
-      items: [],
-      status: 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      total: 0,
-    };
+    // Abre a mesa e mostra o modal para criar a primeira comanda
     updateTable({
       ...selectedTable,
       status: 'occupied',
       openedAt: new Date(),
-      comandas: [newComanda],
+      comandas: [],
       reservedAt: undefined,
       reservedFor: undefined,
     });
-    setActiveComanda(newComanda);
     setShowActions(false);
-    setShowMenu(true);
-    toast({ title: 'Mesa aberta!', description: `Mesa ${selectedTable.number} com comanda #1` });
+    setShowCreateComanda(true);
   };
 
   const handleReserveTable = () => {
