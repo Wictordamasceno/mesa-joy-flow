@@ -3,9 +3,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Table, Reservation } from '@/types/restaurant';
 import { Button } from './ui/button';
-import { X, CalendarCheck, Calendar, Clock, User, FileText } from 'lucide-react';
+import { X, CalendarCheck, Calendar, Clock, User, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { Calendar as CalendarComponent } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { cn } from '@/lib/utils';
 
 interface ReserveTableModalProps {
@@ -25,6 +24,7 @@ export function ReserveTableModal({ table, onClose, onConfirm, existingReservati
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const isDateReserved = (date: Date) => {
     return existingReservations.some(r => 
@@ -92,50 +92,42 @@ export function ReserveTableModal({ table, onClose, onConfirm, existingReservati
               <Calendar size={16} />
               Data da reserva
             </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="touch"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {selectedDate ? format(selectedDate, "PPP", { locale: ptBR }) : "Selecione a data"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <div className="relative">
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setSelectedDate(date);
-                    }}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    modifiers={{
-                      reserved: (date) => isDateReserved(date),
-                    }}
-                    modifiersClassNames={{
-                      reserved: 'bg-table-reserved/30 text-table-reserved',
-                    }}
-                    className="p-3 pointer-events-auto"
-                    locale={ptBR}
-                  />
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 h-7 w-7 p-0"
-                    >
-                      <X size={16} />
-                    </Button>
-                  </PopoverTrigger>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <button
+              type="button"
+              onClick={() => setShowCalendar(!showCalendar)}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-xl bg-secondary text-left transition-all touch-manipulation",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                {selectedDate ? format(selectedDate, "PPP", { locale: ptBR }) : "Selecione a data"}
+              </div>
+              {showCalendar ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            
+            {showCalendar && (
+              <div className="bg-secondary rounded-xl p-2 animate-fade-in">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    setSelectedDate(date);
+                    setShowCalendar(false);
+                  }}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  modifiers={{
+                    reserved: (date) => isDateReserved(date),
+                  }}
+                  modifiersClassNames={{
+                    reserved: 'bg-table-reserved/30 text-table-reserved',
+                  }}
+                  className="pointer-events-auto"
+                  locale={ptBR}
+                />
+              </div>
+            )}
           </div>
 
           {/* Horário */}
