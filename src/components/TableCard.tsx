@@ -85,9 +85,8 @@ export function TableCard({ table, onClick }: TableCardProps) {
       >
       {/* Status indicator */}
       {displayStatus === 'billing' ? (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-table-billing/20 px-2 py-0.5 rounded-full animate-pulse-soft">
-          <Receipt size={12} className="text-table-billing" />
-          <span className="text-[10px] font-semibold text-table-billing">Conta</span>
+        <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-table-billing/20 flex items-center justify-center animate-pulse-soft">
+          <Receipt size={16} className="text-table-billing" />
         </div>
       ) : (
         <div className={cn(
