@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Table, Comanda, TableStatus, MenuItem, Extra } from '@/types/restaurant';
+import { Table, Comanda, TableStatus, MenuItem, Extra, Reservation } from '@/types/restaurant';
 import { initialTables } from '@/data/tablesData';
 import { Header } from '@/components/Header';
 import { TablesGrid } from '@/components/TablesGrid';
 import { TableActionsModal } from '@/components/TableActionsModal';
 import { ComandaSelector } from '@/components/ComandaSelector';
 import { ReserveTableModal } from '@/components/ReserveTableModal';
+import { ReservationsModal } from '@/components/ReservationsModal';
 import { CreateComandaModal } from '@/components/CreateComandaModal';
 import { TransferComandasModal } from '@/components/TransferComandasModal';
 import { MenuSearchModal } from '@/components/MenuSearchModal';
 import { useToast } from '@/hooks/use-toast';
+import { isToday } from 'date-fns';
 
 interface IndexProps {
   attendantName?: string;
@@ -22,16 +24,26 @@ const Index = ({ attendantName }: IndexProps) => {
   const [showActions, setShowActions] = useState(false);
   const [showComandas, setShowComandas] = useState(false);
   const [showReserve, setShowReserve] = useState(false);
+  const [showReservations, setShowReservations] = useState(false);
   const [showCreateComanda, setShowCreateComanda] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [activeComanda, setActiveComanda] = useState<Comanda | null>(null);
   const { toast } = useToast();
 
+  // Calculate display status considering today's reservations
+  const getDisplayStatus = (table: Table): TableStatus => {
+    if (table.status === 'occupied' || table.status === 'billing') return table.status;
+    const hasReservationToday = table.reservations.some(r => isToday(new Date(r.date)));
+    if (hasReservationToday) return 'reserved';
+    return 'available';
+  };
+
   const tableCounts = useMemo(() => {
     return tables.reduce(
       (acc, table) => {
-        acc[table.status]++;
+        const displayStatus = getDisplayStatus(table);
+        acc[displayStatus]++;
         return acc;
       },
       { available: 0, occupied: 0, billing: 0, reserved: 0 } as Record<TableStatus, number>
@@ -40,7 +52,7 @@ const Index = ({ attendantName }: IndexProps) => {
 
   const filteredTables = useMemo(() => {
     if (activeFilter === 'all') return tables;
-    return tables.filter((table) => table.status === activeFilter);
+    return tables.filter((table) => getDisplayStatus(table) === activeFilter);
   }, [tables, activeFilter]);
 
   const updateTable = (updatedTable: Table) => {
@@ -55,14 +67,14 @@ const Index = ({ attendantName }: IndexProps) => {
 
   const handleOpenTable = () => {
     if (!selectedTable) return;
-    // Abre a mesa e mostra o modal para criar a primeira comanda
+    // Remove today's reservation if exists
+    const updatedReservations = selectedTable.reservations.filter(r => !isToday(new Date(r.date)));
     updateTable({
       ...selectedTable,
       status: 'occupied',
       openedAt: new Date(),
       comandas: [],
-      reservedAt: undefined,
-      reservedFor: undefined,
+      reservations: updatedReservations,
     });
     setShowActions(false);
     setShowCreateComanda(true);
@@ -73,11 +85,27 @@ const Index = ({ attendantName }: IndexProps) => {
     setShowReserve(true);
   };
 
-  const handleConfirmReserve = (customerName: string) => {
+  const handleConfirmReserve = (reservation: Omit<Reservation, 'id' | 'createdAt'>) => {
     if (!selectedTable) return;
-    updateTable({ ...selectedTable, status: 'reserved', reservedFor: customerName, reservedAt: new Date() });
+    const newReservation: Reservation = {
+      ...reservation,
+      id: `reservation-${Date.now()}`,
+      createdAt: new Date(),
+    };
+    updateTable({
+      ...selectedTable,
+      reservations: [...selectedTable.reservations, newReservation],
+    });
     setShowReserve(false);
-    toast({ title: 'Mesa reservada!', description: customerName });
+    toast({ title: 'Reserva criada!', description: `${reservation.customerName} - ${reservation.time}` });
+  };
+
+  const handleCancelTodayReservation = () => {
+    if (!selectedTable) return;
+    const updatedReservations = selectedTable.reservations.filter(r => !isToday(new Date(r.date)));
+    updateTable({ ...selectedTable, reservations: updatedReservations });
+    setShowActions(false);
+    toast({ title: 'Reserva cancelada!', description: `Mesa ${selectedTable.number}` });
   };
 
   const handleAddComanda = () => {
@@ -177,7 +205,7 @@ const Index = ({ attendantName }: IndexProps) => {
 
   const handleCloseTable = () => {
     if (!selectedTable) return;
-    updateTable({ ...selectedTable, status: 'available', comandas: [], openedAt: undefined, reservedAt: undefined, reservedFor: undefined });
+    updateTable({ ...selectedTable, status: 'available', comandas: [], openedAt: undefined });
     setShowActions(false);
     toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
   };
@@ -211,9 +239,50 @@ const Index = ({ attendantName }: IndexProps) => {
     toast({ title: `+${quantity} ${item.name}`, description: `R$ ${((item.price + extrasTotal) * quantity).toFixed(2)}` });
   };
 
+  // Reservation management handlers
+  const handleAddReservationFromModal = (tableId: number) => {
+    const table = tables.find(t => t.id === tableId);
+    if (table) {
+      setSelectedTable(table);
+      setShowReservations(false);
+      setShowReserve(true);
+    }
+  };
+
+  const handleCancelReservationFromModal = (tableId: number, reservationId: string) => {
+    setTables(prev => prev.map(t => {
+      if (t.id === tableId) {
+        return { ...t, reservations: t.reservations.filter(r => r.id !== reservationId) };
+      }
+      return t;
+    }));
+    toast({ title: 'Reserva cancelada!' });
+  };
+
+  const handleOpenReservationFromModal = (tableId: number, reservationId: string) => {
+    const table = tables.find(t => t.id === tableId);
+    if (table) {
+      const updatedReservations = table.reservations.filter(r => r.id !== reservationId);
+      setTables(prev => prev.map(t => {
+        if (t.id === tableId) {
+          return { ...t, status: 'occupied', openedAt: new Date(), comandas: [], reservations: updatedReservations };
+        }
+        return t;
+      }));
+      setSelectedTable({ ...table, status: 'occupied', openedAt: new Date(), comandas: [], reservations: updatedReservations });
+      setShowReservations(false);
+      setShowCreateComanda(true);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <Header tableCounts={tableCounts} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+      <Header 
+        tableCounts={tableCounts} 
+        activeFilter={activeFilter} 
+        onFilterChange={setActiveFilter}
+        onOpenReservations={() => setShowReservations(true)}
+      />
       <main className="pb-20">
         <TablesGrid tables={filteredTables} onTableClick={handleTableClick} />
       </main>
@@ -228,11 +297,27 @@ const Index = ({ attendantName }: IndexProps) => {
           onManageComandas={handleManageComandas}
           onTransferComandas={handleTransferComandas}
           onCloseTable={handleCloseTable}
+          onCancelReservation={handleCancelTodayReservation}
         />
       )}
 
       {showReserve && selectedTable && (
-        <ReserveTableModal table={selectedTable} onClose={() => setShowReserve(false)} onConfirm={handleConfirmReserve} />
+        <ReserveTableModal 
+          table={selectedTable} 
+          onClose={() => setShowReserve(false)} 
+          onConfirm={handleConfirmReserve}
+          existingReservations={selectedTable.reservations}
+        />
+      )}
+
+      {showReservations && (
+        <ReservationsModal
+          tables={tables}
+          onClose={() => setShowReservations(false)}
+          onAddReservation={handleAddReservationFromModal}
+          onCancelReservation={handleCancelReservationFromModal}
+          onOpenReservation={handleOpenReservationFromModal}
+        />
       )}
 
       {showCreateComanda && selectedTable && (

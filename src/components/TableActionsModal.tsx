@@ -2,6 +2,7 @@ import { Table } from '@/types/restaurant';
 import { Button } from './ui/button';
 import { X, DoorOpen, CalendarCheck, Users, ArrowRightLeft, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isToday } from 'date-fns';
 
 interface TableActionsModalProps {
   table: Table;
@@ -12,6 +13,11 @@ interface TableActionsModalProps {
   onManageComandas: () => void;
   onTransferComandas: () => void;
   onCloseTable: () => void;
+  onCancelReservation?: () => void;
+}
+
+function getTodayReservation(table: Table) {
+  return table.reservations.find(r => isToday(new Date(r.date)));
 }
 
 export function TableActionsModal({
@@ -23,10 +29,12 @@ export function TableActionsModal({
   onManageComandas,
   onTransferComandas,
   onCloseTable,
+  onCancelReservation,
 }: TableActionsModalProps) {
-  const isAvailable = table.status === 'available';
-  const isReserved = table.status === 'reserved';
+  const todayReservation = getTodayReservation(table);
+  const isReservedToday = !!todayReservation;
   const isOccupied = table.status === 'occupied' || table.status === 'billing';
+  const isAvailable = !isOccupied && !isReservedToday;
   const hasComandas = table.comandas.length > 0;
 
   return (
@@ -41,7 +49,7 @@ export function TableActionsModal({
             <h2 className="text-2xl font-bold text-foreground">Mesa {table.number}</h2>
             <p className="text-sm text-muted-foreground">
               {isAvailable && 'Disponível para uso'}
-              {isReserved && `Reservada${table.reservedFor ? ` - ${table.reservedFor}` : ''}`}
+              {isReservedToday && `Reservada - ${todayReservation.customerName} às ${todayReservation.time}`}
               {isOccupied && `${table.comandas.filter(c => c.status !== 'closed').length} comanda(s) ativa(s)`}
             </p>
           </div>
@@ -78,8 +86,8 @@ export function TableActionsModal({
             </>
           )}
 
-          {/* Mesa reservada */}
-          {isReserved && (
+          {/* Mesa reservada hoje */}
+          {isReservedToday && !isOccupied && (
             <>
               <Button
                 variant="default"
@@ -88,12 +96,12 @@ export function TableActionsModal({
                 className="w-full justify-start gap-3"
               >
                 <DoorOpen size={22} />
-                Abrir Mesa (Cancelar Reserva)
+                Abrir Mesa (Usar Reserva)
               </Button>
               <Button
                 variant="outline"
                 size="touch"
-                onClick={onCloseTable}
+                onClick={onCancelReservation}
                 className="w-full justify-start gap-3"
               >
                 <X size={22} />

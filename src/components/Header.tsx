@@ -1,11 +1,12 @@
 import { TableStatus } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Wifi } from 'lucide-react';
+import { Wifi, CalendarCheck } from 'lucide-react';
 
 interface HeaderProps {
   tableCounts: Record<TableStatus, number>;
   activeFilter: TableStatus | 'all';
   onFilterChange: (filter: TableStatus | 'all') => void;
+  onOpenReservations?: () => void;
 }
 
 const filterConfig = {
@@ -16,7 +17,7 @@ const filterConfig = {
   reserved: { label: 'Reservadas', color: 'bg-table-reserved' },
 };
 
-export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProps) {
+export function Header({ tableCounts, activeFilter, onFilterChange, onOpenReservations }: HeaderProps) {
   const total = tableCounts.available + tableCounts.occupied + tableCounts.billing + tableCounts.reserved;
 
   return (
@@ -30,9 +31,20 @@ export function Header({ tableCounts, activeFilter, onFilterChange }: HeaderProp
               Toque para gerenciar
             </p>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 text-success">
-            <Wifi size={14} className="animate-pulse-soft" />
-            <span className="text-xs font-medium">ERP Online</span>
+          <div className="flex items-center gap-2">
+            {onOpenReservations && (
+              <button
+                onClick={onOpenReservations}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-table-reserved/20 text-table-reserved touch-manipulation active-scale"
+              >
+                <CalendarCheck size={14} />
+                <span className="text-xs font-medium">Reservas</span>
+              </button>
+            )}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 text-success">
+              <Wifi size={14} className="animate-pulse-soft" />
+              <span className="text-xs font-medium">ERP Online</span>
+            </div>
           </div>
         </div>
 
