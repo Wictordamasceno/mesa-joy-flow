@@ -72,16 +72,17 @@ export function TableCard({ table, onClick }: TableCardProps) {
   const todayReservation = getTodayReservation(table);
 
   return (
-    <button
-      onClick={() => onClick(table)}
-      className={cn(
-        'relative flex flex-col items-center justify-center',
-        'p-4 rounded-2xl border-2',
-        'transition-all duration-150 touch-manipulation active-scale',
-        'h-[140px] w-full',
-        config.bgClass
-      )}
-    >
+      <button
+        onClick={() => onClick(table)}
+        className={cn(
+          'relative flex flex-col items-center justify-center',
+          'p-4 rounded-2xl border-2',
+          'transition-all duration-150 touch-manipulation active-scale',
+          'h-[140px] w-full',
+          displayStatus === 'billing' ? 'pt-7' : '',
+          config.bgClass
+        )}
+      >
       {/* Status indicator */}
       {displayStatus === 'billing' ? (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-table-billing/20 px-2 py-0.5 rounded-full animate-pulse-soft">
