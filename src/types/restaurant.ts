@@ -1,5 +1,14 @@
 export type TableStatus = 'available' | 'occupied' | 'billing' | 'reserved';
 
+export interface Reservation {
+  id: string;
+  customerName: string;
+  date: Date;
+  time: string;
+  notes?: string;
+  createdAt: Date;
+}
+
 export interface Table {
   id: number;
   number: number;
@@ -7,8 +16,7 @@ export interface Table {
   status: TableStatus;
   comandas: Comanda[];
   openedAt?: Date;
-  reservedAt?: Date;
-  reservedFor?: string;
+  reservations: Reservation[];
 }
 
 export interface Comanda {

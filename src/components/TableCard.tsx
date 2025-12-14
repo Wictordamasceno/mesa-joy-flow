@@ -1,6 +1,7 @@
 import { Table } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Clock, FileText } from 'lucide-react';
+import { Clock, FileText, CalendarCheck } from 'lucide-react';
+import { format, isToday } from 'date-fns';
 
 interface TableCardProps {
   table: Table;
@@ -49,10 +50,23 @@ function getTableTotal(table: Table): number {
   return table.comandas.reduce((sum, comanda) => sum + comanda.total, 0);
 }
 
+function getTodayReservation(table: Table) {
+  return table.reservations.find(r => isToday(new Date(r.date)));
+}
+
+function getTableDisplayStatus(table: Table): 'available' | 'occupied' | 'billing' | 'reserved' {
+  if (table.status === 'occupied' || table.status === 'billing') return table.status;
+  const todayReservation = getTodayReservation(table);
+  if (todayReservation) return 'reserved';
+  return 'available';
+}
+
 export function TableCard({ table, onClick }: TableCardProps) {
-  const config = statusConfig[table.status];
+  const displayStatus = getTableDisplayStatus(table);
+  const config = statusConfig[displayStatus];
   const openComandas = table.comandas.filter(c => c.status !== 'closed').length;
   const tableTotal = getTableTotal(table);
+  const todayReservation = getTodayReservation(table);
 
   return (
     <button
@@ -77,7 +91,7 @@ export function TableCard({ table, onClick }: TableCardProps) {
       </span>
       
       {/* Comandas count for occupied/billing tables */}
-      {(table.status === 'occupied' || table.status === 'billing') && openComandas > 0 && (
+      {(displayStatus === 'occupied' || displayStatus === 'billing') && openComandas > 0 && (
         <div className="flex items-center gap-1.5 text-muted-foreground mb-2">
           <FileText size={14} />
           <span className="text-sm">{openComandas} comanda{openComandas > 1 ? 's' : ''}</span>
@@ -90,7 +104,7 @@ export function TableCard({ table, onClick }: TableCardProps) {
       </span>
 
       {/* Duration and total for non-available */}
-      {(table.status === 'occupied' || table.status === 'billing') && table.openedAt && (
+      {(displayStatus === 'occupied' || displayStatus === 'billing') && table.openedAt && (
         <div className="flex items-center gap-2 mt-1">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock size={10} />
@@ -104,11 +118,16 @@ export function TableCard({ table, onClick }: TableCardProps) {
         </div>
       )}
 
-      {/* Reserved info */}
-      {table.status === 'reserved' && table.reservedFor && (
-        <span className="text-xs text-muted-foreground mt-1 truncate max-w-full px-2">
-          {table.reservedFor}
-        </span>
+      {/* Reserved info - show today's reservation */}
+      {displayStatus === 'reserved' && todayReservation && (
+        <div className="flex flex-col items-center mt-1">
+          <span className="text-xs text-muted-foreground truncate max-w-full px-2">
+            {todayReservation.customerName}
+          </span>
+          <span className="text-xs text-table-reserved font-medium">
+            {todayReservation.time}
+          </span>
+        </div>
       )}
     </button>
   );
