@@ -55,7 +55,10 @@ function getTodayReservation(table: Table) {
 }
 
 function getTableDisplayStatus(table: Table): 'available' | 'occupied' | 'billing' | 'reserved' {
-  if (table.status === 'occupied' || table.status === 'billing') return table.status;
+  // Check if any comanda is requesting the bill
+  const hasBillingComanda = table.comandas.some(c => c.status === 'billing');
+  if (hasBillingComanda) return 'billing';
+  if (table.status === 'occupied') return 'occupied';
   const todayReservation = getTodayReservation(table);
   if (todayReservation) return 'reserved';
   return 'available';
