@@ -1,6 +1,6 @@
 import { Table } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Clock, FileText, CalendarCheck } from 'lucide-react';
+import { Clock, FileText, CalendarCheck, Receipt } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 
 interface TableCardProps {
@@ -80,10 +80,17 @@ export function TableCard({ table, onClick }: TableCardProps) {
       )}
     >
       {/* Status indicator */}
-      <div className={cn(
-        'absolute top-3 right-3 w-3 h-3 rounded-full',
-        config.dotClass
-      )} />
+      {displayStatus === 'billing' ? (
+        <div className="absolute top-3 right-3 flex items-center gap-1 bg-table-billing/20 px-2 py-1 rounded-full animate-pulse-soft">
+          <Receipt size={14} className="text-table-billing" />
+          <span className="text-xs font-semibold text-table-billing">Conta</span>
+        </div>
+      ) : (
+        <div className={cn(
+          'absolute top-3 right-3 w-3 h-3 rounded-full',
+          config.dotClass
+        )} />
+      )}
 
       {/* Table number */}
       <span className="text-4xl font-bold text-foreground mb-2">
