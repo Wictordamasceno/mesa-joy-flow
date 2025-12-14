@@ -107,20 +107,33 @@ export function ReserveTableModal({ table, onClose, onConfirm, existingReservati
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  modifiers={{
-                    reserved: (date) => isDateReserved(date),
-                  }}
-                  modifiersClassNames={{
-                    reserved: 'bg-table-reserved/30 text-table-reserved',
-                  }}
-                  className="p-3 pointer-events-auto"
-                  locale={ptBR}
-                />
+                <div className="relative">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => {
+                      setSelectedDate(date);
+                    }}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    modifiers={{
+                      reserved: (date) => isDateReserved(date),
+                    }}
+                    modifiersClassNames={{
+                      reserved: 'bg-table-reserved/30 text-table-reserved',
+                    }}
+                    className="p-3 pointer-events-auto"
+                    locale={ptBR}
+                  />
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-7 w-7 p-0"
+                    >
+                      <X size={16} />
+                    </Button>
+                  </PopoverTrigger>
+                </div>
               </PopoverContent>
             </Popover>
           </div>
