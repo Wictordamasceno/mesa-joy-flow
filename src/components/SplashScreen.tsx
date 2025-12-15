@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import damatechLogo from "@/assets/damatech-logo.png";
+import comandaproIcon from "@/assets/comandapro-icon.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -30,8 +31,8 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       <div className="flex flex-col items-center gap-8 animate-fade-in">
         {/* ComandaPro - Main Item */}
         <div className="flex flex-col items-center gap-4">
-          <div className="w-28 h-28 rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30">
-            <span className="text-6xl font-bold text-primary">C</span>
+          <div className="w-28 h-28 rounded-3xl bg-primary/20 flex items-center justify-center border border-primary/30 p-5">
+            <img src={comandaproIcon} alt="ComandaPro" className="w-full h-full object-contain" />
           </div>
           
           <div className="text-center">
