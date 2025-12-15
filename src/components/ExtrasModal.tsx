@@ -35,7 +35,7 @@ export function ExtrasModal({ item, onClose, onConfirm }: ExtrasModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-slide-up max-h-[85vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-slide-up max-h-[85dvh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-foreground">{item.name}</h2>

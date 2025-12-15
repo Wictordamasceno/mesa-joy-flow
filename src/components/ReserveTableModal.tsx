@@ -55,7 +55,7 @@ export function ReserveTableModal({ table, onClose, onConfirm, existingReservati
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-slide-up max-h-[85dvh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-foreground">Reservar Mesa {table.number}</h2>

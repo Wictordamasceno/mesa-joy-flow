@@ -30,7 +30,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col overflow-y-auto">
       {/* Header */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo */}
