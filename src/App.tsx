@@ -12,62 +12,8 @@ import { SplashScreen } from "./components/SplashScreen";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [attendantName, setAttendantName] = useState("");
-
-  useEffect(() => {
-    // Check if user is already logged in
-    const savedName = localStorage.getItem("attendantName");
-    if (savedName) {
-      setAttendantName(savedName);
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleLogin = (name: string) => {
-    setAttendantName(name);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("attendantName");
-    setAttendantName("");
-    setIsAuthenticated(false);
-  };
-
-  if (showSplash) {
-    // Temporário: splash screen visível para edição
-    return <SplashScreen onComplete={() => {}} />;
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Login onLogin={handleLogin} />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index attendantName={attendantName} onLogout={handleLogout} />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+  // Modo edição: mostrar apenas a splash screen sempre
+  return <SplashScreen onComplete={() => {}} />;
 };
 
 export default App;
