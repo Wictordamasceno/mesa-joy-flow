@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Table } from '@/types/restaurant';
 import { Button } from './ui/button';
 import { X, Plus } from 'lucide-react';
@@ -12,6 +12,16 @@ interface CreateComandaModalProps {
 
 export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: CreateComandaModalProps) {
   const [customerName, setCustomerName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Delay focus to allow modal animation to complete
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleConfirm = () => {
     onConfirm(customerName.trim() || undefined);
@@ -42,12 +52,12 @@ export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: Cr
               Nome do cliente (opcional)
             </label>
             <input
+              ref={inputRef}
               type="text"
               placeholder="Ex: João, Maria..."
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-lg"
-              autoFocus
             />
           </div>
 
