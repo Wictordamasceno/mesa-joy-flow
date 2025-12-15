@@ -2,22 +2,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Settings, User, Server, ChevronDown, ChevronUp } from "lucide-react";
-
 interface LoginProps {
   onLogin: (attendantName: string) => void;
 }
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login({
+  onLogin
+}: LoginProps) {
   const [name, setName] = useState("");
-  const [hostUrl, setHostUrl] = useState(() => 
-    localStorage.getItem("hostUrl") || ""
-  );
+  const [hostUrl, setHostUrl] = useState(() => localStorage.getItem("hostUrl") || "");
   const [showSettings, setShowSettings] = useState(false);
   const [error, setError] = useState("");
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!name.trim()) {
       setError("Por favor, insira seu nome");
       return;
@@ -30,12 +26,9 @@ export default function Login({ onLogin }: LoginProps) {
 
     // Save attendant name
     localStorage.setItem("attendantName", name.trim());
-    
     onLogin(name.trim());
   };
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
+  return <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo */}
@@ -56,19 +49,11 @@ export default function Login({ onLogin }: LoginProps) {
               <User className="w-4 h-4 text-primary" />
               Nome do Atendente
             </label>
-            <Input
-              type="text"
-              placeholder="Digite seu nome"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError("");
-              }}
-              className="h-14 text-lg bg-card border-border"
-            />
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            <Input type="text" placeholder="Digite seu nome" value={name} onChange={e => {
+            setName(e.target.value);
+            setError("");
+          }} className="h-14 text-lg bg-card border-border" />
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
           <Button type="submit" className="w-full h-14 text-lg" size="lg">
@@ -77,49 +62,28 @@ export default function Login({ onLogin }: LoginProps) {
         </form>
 
         {/* Settings Toggle */}
-        <button
-          type="button"
-          onClick={() => setShowSettings(!showSettings)}
-          className="mt-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-        >
+        <button type="button" onClick={() => setShowSettings(!showSettings)} className="mt-8 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <Settings className="w-4 h-4" />
           <span className="text-sm">Configurações</span>
-          {showSettings ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
+          {showSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {/* Settings Panel */}
-        {showSettings && (
-          <div className="mt-4 w-full max-w-sm p-4 bg-card rounded-xl border border-border animate-fade-in">
+        {showSettings && <div className="mt-4 w-full max-w-sm p-4 bg-card rounded-xl border border-border animate-fade-in">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground flex items-center gap-2">
                 <Server className="w-4 h-4 text-primary" />
                 Endereço do Servidor
               </label>
-              <Input
-                type="url"
-                placeholder="http://192.168.1.100:8080"
-                value={hostUrl}
-                onChange={(e) => setHostUrl(e.target.value)}
-                className="h-12 bg-secondary/50 border-border"
-              />
+              <Input type="url" placeholder="http://192.168.1.100:8080" value={hostUrl} onChange={e => setHostUrl(e.target.value)} className="h-12 bg-secondary/50 border-border" />
               <p className="text-xs text-muted-foreground">
                 Insira o endereço IP e porta do servidor ERP
               </p>
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Footer */}
-      <div className="p-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          © 2024 Damatech Soluções
-        </p>
-      </div>
-    </div>
-  );
+      
+    </div>;
 }
