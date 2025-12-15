@@ -30,6 +30,12 @@ const App = () => {
     setIsAuthenticated(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("attendantName");
+    setAttendantName("");
+    setIsAuthenticated(false);
+  };
+
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
@@ -53,7 +59,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index attendantName={attendantName} />} />
+            <Route path="/" element={<Index attendantName={attendantName} onLogout={handleLogout} />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

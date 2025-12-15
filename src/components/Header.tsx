@@ -1,12 +1,13 @@
 import { TableStatus } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Wifi, CalendarCheck } from 'lucide-react';
+import { Wifi, CalendarCheck, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   tableCounts: Record<TableStatus, number>;
   activeFilter: TableStatus | 'all';
   onFilterChange: (filter: TableStatus | 'all') => void;
   onOpenReservations?: () => void;
+  onLogout?: () => void;
 }
 
 const filterConfig = {
@@ -17,7 +18,7 @@ const filterConfig = {
   reserved: { label: 'Reservadas', color: 'bg-table-reserved' },
 };
 
-export function Header({ tableCounts, activeFilter, onFilterChange, onOpenReservations }: HeaderProps) {
+export function Header({ tableCounts, activeFilter, onFilterChange, onOpenReservations, onLogout }: HeaderProps) {
   const total = tableCounts.available + tableCounts.occupied + tableCounts.billing + tableCounts.reserved;
 
   return (
@@ -45,6 +46,15 @@ export function Header({ tableCounts, activeFilter, onFilterChange, onOpenReserv
               <Wifi size={14} className="animate-pulse-soft" />
               <span className="text-xs font-medium">ERP Online</span>
             </div>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-destructive/20 text-destructive touch-manipulation active-scale"
+                title="Sair"
+              >
+                <LogOut size={16} />
+              </button>
+            )}
           </div>
         </div>
 
