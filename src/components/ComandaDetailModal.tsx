@@ -127,10 +127,16 @@ export function ComandaDetailModal({
       <div className="p-4 border-t border-border bg-card space-y-3 safe-bottom">
         {/* Billing Summary - shown when requesting bill */}
         {comanda.status === 'billing' && comanda.items.length > 0 && (() => {
-          const SERVICE_CHARGE_PERCENT = 10; // TODO: será definido pelo backend
-          const subtotal = comanda.total;
-          const serviceCharge = subtotal * (SERVICE_CHARGE_PERCENT / 100);
-          const totalWithService = subtotal + serviceCharge;
+          // TODO: valores serão definidos pelo backend
+          const SERVICE_CHARGE_PERCENT = 10;
+          const COUVERT_ENABLED = true; // backend informará se há couvert no dia
+          const COUVERT_VALUE = 12.00; // valor do couvert por pessoa
+          
+          const itemsSubtotal = comanda.total;
+          const couvertTotal = COUVERT_ENABLED ? COUVERT_VALUE : 0;
+          const subtotalWithCouvert = itemsSubtotal + couvertTotal;
+          const serviceCharge = subtotalWithCouvert * (SERVICE_CHARGE_PERCENT / 100);
+          const totalWithService = subtotalWithCouvert + serviceCharge;
           
           return (
             <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
@@ -140,9 +146,25 @@ export function ComandaDetailModal({
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Consumo</span>
+                  <span className="font-semibold text-foreground">
+                    R$ {itemsSubtotal.toFixed(2)}
+                  </span>
+                </div>
+
+                {COUVERT_ENABLED && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Couvert Artístico</span>
+                    <span className="font-semibold text-foreground">
+                      R$ {couvertTotal.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between border-t border-border/50 pt-2">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-semibold text-foreground">
-                    R$ {subtotal.toFixed(2)}
+                    R$ {subtotalWithCouvert.toFixed(2)}
                   </span>
                 </div>
                 
