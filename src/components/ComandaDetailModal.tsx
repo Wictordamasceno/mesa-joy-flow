@@ -125,13 +125,56 @@ export function ComandaDetailModal({
 
       {/* Footer actions */}
       <div className="p-4 border-t border-border bg-card space-y-3 safe-bottom">
-        {/* Total */}
-        <div className="flex items-center justify-between">
-          <span className="text-lg text-muted-foreground">Total</span>
-          <span className="text-3xl font-bold text-primary">
-            R$ {comanda.total.toFixed(2)}
-          </span>
-        </div>
+        {/* Billing Summary - shown when requesting bill */}
+        {comanda.status === 'billing' && comanda.items.length > 0 && (() => {
+          const SERVICE_CHARGE_PERCENT = 10; // TODO: será definido pelo backend
+          const subtotal = comanda.total;
+          const serviceCharge = subtotal * (SERVICE_CHARGE_PERCENT / 100);
+          const totalWithService = subtotal + serviceCharge;
+          
+          return (
+            <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
+              <h3 className="font-semibold text-foreground text-center border-b border-border pb-2">
+                Resumo da Conta
+              </h3>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-semibold text-foreground">
+                    R$ {subtotal.toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    Taxa de Serviço ({SERVICE_CHARGE_PERCENT}%)
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    R$ {serviceCharge.toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="border-t border-border pt-2 flex items-center justify-between">
+                  <span className="text-lg font-bold text-foreground">Total</span>
+                  <span className="text-2xl font-bold text-primary">
+                    R$ {totalWithService.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Simple Total - shown when not billing */}
+        {comanda.status !== 'billing' && (
+          <div className="flex items-center justify-between">
+            <span className="text-lg text-muted-foreground">Total</span>
+            <span className="text-3xl font-bold text-primary">
+              R$ {comanda.total.toFixed(2)}
+            </span>
+          </div>
+        )}
 
         {/* Add items button */}
         {comanda.status !== 'billing' && comanda.items.length > 0 && (
