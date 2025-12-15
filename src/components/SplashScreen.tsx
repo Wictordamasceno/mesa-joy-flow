@@ -47,13 +47,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* Damatech Logo - Secondary/Smaller - Clickable */}
         <button 
           onClick={handleDamatechClick}
-          className="mt-8 flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+          className="mt-8 flex flex-col items-center gap-3 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
         >
-          <p className="text-xs text-muted-foreground">powered by</p>
+          <p className="text-sm text-muted-foreground">powered by</p>
           <img 
             src={damatechLogo} 
             alt="Damatech Soluções" 
-            className="h-6 w-auto"
+            className="h-9 w-auto"
           />
         </button>
       </div>
