@@ -15,9 +15,10 @@ import { isToday } from 'date-fns';
 
 interface IndexProps {
   attendantName?: string;
+  onLogout?: () => void;
 }
 
-const Index = ({ attendantName }: IndexProps) => {
+const Index = ({ attendantName, onLogout }: IndexProps) => {
   const [tables, setTables] = useState<Table[]>(initialTables);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [activeFilter, setActiveFilter] = useState<TableStatus | 'all'>('all');
@@ -282,6 +283,7 @@ const Index = ({ attendantName }: IndexProps) => {
         activeFilter={activeFilter} 
         onFilterChange={setActiveFilter}
         onOpenReservations={() => setShowReservations(true)}
+        onLogout={onLogout}
       />
       <main className="pb-20">
         <TablesGrid tables={filteredTables} onTableClick={handleTableClick} />
