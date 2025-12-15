@@ -9,15 +9,14 @@ interface SplashScreenProps {
 export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Temporário: desativar animação de saída para edição da splash screen
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setFadeOut(true);
-  //     setTimeout(onComplete, 500);
-  //   }, 2500);
-  //
-  //   return () => clearTimeout(timer);
-  // }, [onComplete]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFadeOut(true);
+      setTimeout(onComplete, 500);
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, [onComplete]);
 
   const handleDamatechClick = () => {
     window.open("https://damatechsolucoes.com.br", "_blank");
