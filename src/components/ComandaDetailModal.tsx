@@ -134,9 +134,8 @@ export function ComandaDetailModal({
           
           const itemsSubtotal = comanda.total;
           const couvertTotal = COUVERT_ENABLED ? COUVERT_VALUE : 0;
-          const subtotalWithCouvert = itemsSubtotal + couvertTotal;
-          const serviceCharge = subtotalWithCouvert * (SERVICE_CHARGE_PERCENT / 100);
-          const totalWithService = subtotalWithCouvert + serviceCharge;
+          const serviceCharge = itemsSubtotal * (SERVICE_CHARGE_PERCENT / 100); // apenas sobre consumo
+          const total = itemsSubtotal + couvertTotal + serviceCharge;
           
           return (
             <div className="bg-secondary/50 rounded-xl p-4 space-y-3">
@@ -161,13 +160,6 @@ export function ComandaDetailModal({
                   </div>
                 )}
 
-                <div className="flex items-center justify-between border-t border-border/50 pt-2">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold text-foreground">
-                    R$ {subtotalWithCouvert.toFixed(2)}
-                  </span>
-                </div>
-                
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
                     Taxa de Serviço ({SERVICE_CHARGE_PERCENT}%)
@@ -180,7 +172,7 @@ export function ComandaDetailModal({
                 <div className="border-t border-border pt-2 flex items-center justify-between">
                   <span className="text-lg font-bold text-foreground">Total</span>
                   <span className="text-2xl font-bold text-primary">
-                    R$ {totalWithService.toFixed(2)}
+                    R$ {total.toFixed(2)}
                   </span>
                 </div>
               </div>
