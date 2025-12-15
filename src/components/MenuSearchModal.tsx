@@ -40,7 +40,7 @@ export function MenuSearchModal({ onClose, onAddItem }: MenuSearchModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background animate-slide-up flex flex-col">
+    <div className="fixed inset-0 z-50 bg-background animate-slide-up flex flex-col h-dvh">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card safe-top">
         <button
