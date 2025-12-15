@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { TablesGrid } from '@/components/TablesGrid';
 import { TableActionsModal } from '@/components/TableActionsModal';
 import { ComandaSelector } from '@/components/ComandaSelector';
+import { ComandaDetailModal } from '@/components/ComandaDetailModal';
 import { ReserveTableModal } from '@/components/ReserveTableModal';
 import { ReservationsModal } from '@/components/ReservationsModal';
 import { CreateComandaModal } from '@/components/CreateComandaModal';
@@ -29,6 +30,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   const [showCreateComanda, setShowCreateComanda] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showComandaDetail, setShowComandaDetail] = useState(false);
   const [activeComanda, setActiveComanda] = useState<Comanda | null>(null);
   const { toast } = useToast();
 
@@ -131,7 +133,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     updateTable({ ...selectedTable, comandas: [...selectedTable.comandas, newComanda] });
     setActiveComanda(newComanda);
     setShowCreateComanda(false);
-    setShowMenu(true);
+    setShowComandaDetail(true);
     toast({ title: 'Comanda criada!', description: `Comanda #${nextNumber}` });
   };
 
@@ -143,6 +145,20 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   const handleSelectComanda = (comanda: Comanda) => {
     setActiveComanda(comanda);
     setShowComandas(false);
+    setShowComandaDetail(true);
+  };
+
+  const handleUpdateComanda = (updatedComanda: Comanda) => {
+    if (!selectedTable) return;
+    const updatedComandas = selectedTable.comandas.map(c =>
+      c.id === updatedComanda.id ? updatedComanda : c
+    );
+    updateTable({ ...selectedTable, comandas: updatedComandas });
+    setActiveComanda(updatedComanda);
+  };
+
+  const handleOpenMenuFromDetail = () => {
+    setShowComandaDetail(false);
     setShowMenu(true);
   };
 
@@ -224,6 +240,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
       status: 'pending' as const,
     };
 
+    let updatedComanda: Comanda | null = null;
     const updatedComandas = selectedTable.comandas.map(c => {
       if (c.id === activeComanda.id) {
         const updatedItems = [...c.items, newItem];
@@ -231,12 +248,16 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
           const extrasSum = i.selectedExtras?.reduce((s, e) => s + e.price, 0) || 0;
           return sum + (i.menuItem.price + extrasSum) * i.quantity;
         }, 0);
-        return { ...c, items: updatedItems, total, updatedAt: new Date() };
+        updatedComanda = { ...c, items: updatedItems, total, updatedAt: new Date() };
+        return updatedComanda;
       }
       return c;
     });
 
     updateTable({ ...selectedTable, comandas: updatedComandas });
+    if (updatedComanda) {
+      setActiveComanda(updatedComanda);
+    }
     toast({ title: `+${quantity} ${item.name}`, description: `R$ ${((item.price + extrasTotal) * quantity).toFixed(2)}` });
   };
 
@@ -334,8 +355,23 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
         <TransferComandasModal sourceTable={selectedTable} allTables={tables} onClose={() => setShowTransfer(false)} onTransfer={handleConfirmTransfer} />
       )}
 
-      {showMenu && selectedTable && (
-        <MenuSearchModal onClose={() => { setShowMenu(false); setActiveComanda(null); }} onAddItem={handleAddItemToComanda} />
+      {showComandaDetail && selectedTable && activeComanda && (
+        <ComandaDetailModal
+          table={selectedTable}
+          comanda={activeComanda}
+          onClose={() => { setShowComandaDetail(false); setActiveComanda(null); }}
+          onUpdateComanda={handleUpdateComanda}
+          onRequestBill={(c) => { handleRequestBill(c); setShowComandaDetail(false); }}
+          onCloseComanda={(c) => { handleCloseComanda(c); setShowComandaDetail(false); }}
+          onOpenMenu={handleOpenMenuFromDetail}
+        />
+      )}
+
+      {showMenu && selectedTable && activeComanda && (
+        <MenuSearchModal 
+          onClose={() => { setShowMenu(false); setShowComandaDetail(true); }} 
+          onAddItem={handleAddItemToComanda} 
+        />
       )}
     </div>
   );
