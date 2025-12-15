@@ -7,20 +7,19 @@ interface SplashScreenProps {
 export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-      setTimeout(onComplete, 500);
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+  // Temporário: desativar animação de saída para edição da splash screen
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setFadeOut(true);
+  //     setTimeout(onComplete, 500);
+  //   }, 2500);
+  //
+  //   return () => clearTimeout(timer);
+  // }, [onComplete]);
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-background transition-opacity duration-500 ${
-        fadeOut ? "opacity-0" : "opacity-100"
-      }`}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
     >
       {/* Logo/Brand */}
       <div className="flex flex-col items-center gap-6 animate-fade-in">
