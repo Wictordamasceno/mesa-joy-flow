@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import damatechLogo from "@/assets/damatech-logo.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -16,6 +17,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   //
   //   return () => clearTimeout(timer);
   // }, [onComplete]);
+
+  const handleDamatechClick = () => {
+    window.open("https://damatechsolucoes.com.br", "_blank");
+  };
 
   return (
     <div
@@ -39,13 +44,18 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           </div>
         </div>
 
-        {/* Damatech Logo - Secondary/Smaller */}
-        <div className="mt-8 flex flex-col items-center gap-1 opacity-70">
+        {/* Damatech Logo - Secondary/Smaller - Clickable */}
+        <button 
+          onClick={handleDamatechClick}
+          className="mt-8 flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+        >
           <p className="text-xs text-muted-foreground">powered by</p>
-          <span className="text-lg font-medium text-foreground tracking-wide">
-            &lt;/<span className="font-bold">damatech</span>&gt;
-          </span>
-        </div>
+          <img 
+            src={damatechLogo} 
+            alt="Damatech Soluções" 
+            className="h-6 w-auto"
+          />
+        </button>
       </div>
 
       {/* Loading indicator */}
