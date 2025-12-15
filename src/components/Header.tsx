@@ -1,6 +1,6 @@
 import { TableStatus } from '@/types/restaurant';
 import { cn } from '@/lib/utils';
-import { Wifi, CalendarCheck, LogOut } from 'lucide-react';
+import { CalendarCheck, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   tableCounts: Record<TableStatus, number>;
@@ -42,10 +42,6 @@ export function Header({ tableCounts, activeFilter, onFilterChange, onOpenReserv
                 <span className="text-xs font-medium">Reservas</span>
               </button>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/20 text-success">
-              <Wifi size={14} className="animate-pulse-soft" />
-              <span className="text-xs font-medium">ERP Online</span>
-            </div>
             {onLogout && (
               <button
                 onClick={onLogout}
