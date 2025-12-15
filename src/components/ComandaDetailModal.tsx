@@ -84,15 +84,17 @@ export function ComandaDetailModal({
             <ShoppingBag size={64} className="mb-4 opacity-30" />
             <p className="text-lg">Comanda vazia</p>
             <p className="text-sm mt-1">Adicione itens do cardápio</p>
-            <Button
-              variant="default"
-              size="touch"
-              onClick={onOpenMenu}
-              className="mt-6 gap-2"
-            >
-              <Plus size={20} />
-              Adicionar Itens
-            </Button>
+            {comanda.status !== 'billing' && (
+              <Button
+                variant="default"
+                size="touch"
+                onClick={onOpenMenu}
+                className="mt-6 gap-2"
+              >
+                <Plus size={20} />
+                Adicionar Itens
+              </Button>
+            )}
           </div>
         ) : (
           <>
@@ -100,8 +102,9 @@ export function ComandaDetailModal({
               <div key={item.id} className="space-y-1">
                 <OrderItemRow
                   item={item}
-                  onUpdateQuantity={updateQuantity}
-                  onRemove={removeItem}
+                  onUpdateQuantity={comanda.status !== 'billing' ? updateQuantity : () => {}}
+                  onRemove={comanda.status !== 'billing' ? removeItem : () => {}}
+                  disabled={comanda.status === 'billing'}
                 />
                 {/* Show extras and observations */}
                 {(item.selectedExtras?.length > 0 || item.selectedObservations?.length > 0) && (
