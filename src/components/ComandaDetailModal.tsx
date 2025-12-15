@@ -116,7 +116,7 @@ export function ComandaDetailModal({
                   onRemove={removeItem}
                 />
                 {/* Show extras and observations */}
-                {(item.selectedExtras?.length || item.selectedObservations?.length) && (
+                {(item.selectedExtras?.length > 0 || item.selectedObservations?.length > 0) && (
                   <div className="ml-4 pl-3 border-l-2 border-primary/30 text-sm text-muted-foreground space-y-1">
                     {item.selectedExtras?.map((extra) => (
                       <p key={extra.id}>+ {extra.name} (R$ {extra.price.toFixed(2)})</p>
