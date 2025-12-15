@@ -34,10 +34,10 @@ export const IconGenerator = () => {
         throw new Error(data.error);
       }
 
-      // OpenAI gpt-image-1 returns base64 data
-      const imageData = data.data?.[0]?.b64_json;
-      if (imageData) {
-        setGeneratedImage(`data:image/png;base64,${imageData}`);
+      // Lovable AI returns imageUrl directly
+      const imageUrl = data.imageUrl;
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
         toast({
           title: "Ícone gerado!",
           description: "O ícone foi gerado com sucesso.",
