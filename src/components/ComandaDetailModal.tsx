@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { Table, Comanda, MenuItem, Extra, OrderItem } from '@/types/restaurant';
+import { Table, Comanda, OrderItem } from '@/types/restaurant';
 import { Button } from './ui/button';
 import { OrderItemRow } from './OrderItemRow';
-import { X, Plus, Send, Receipt, CheckCircle, ShoppingBag } from 'lucide-react';
+import { X, Plus, Receipt, CheckCircle, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ComandaDetailModalProps {
@@ -47,17 +46,6 @@ export function ComandaDetailModal({
       return sum + (item.menuItem.price + extrasSum) * item.quantity;
     }, 0);
   };
-
-  const sendToKitchen = () => {
-    const updatedItems = comanda.items.map((item) =>
-      item.status === 'pending' ? { ...item, status: 'preparing' as const } : item
-    );
-    onUpdateComanda({ ...comanda, items: updatedItems, status: 'sent', updatedAt: new Date() });
-  };
-
-  const pendingItems = comanda.items.filter((item) => item.status === 'pending');
-  const hasPendingItems = pendingItems.length > 0;
-  const itemCount = comanda.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-background animate-slide-up flex flex-col h-dvh">
@@ -152,19 +140,6 @@ export function ComandaDetailModal({
           >
             <Plus size={20} />
             Adicionar Itens
-          </Button>
-        )}
-
-        {/* Send to kitchen */}
-        {hasPendingItems && (
-          <Button
-            variant="default"
-            size="touch"
-            onClick={sendToKitchen}
-            className="w-full gap-2"
-          >
-            <Send size={20} />
-            Enviar para Cozinha ({pendingItems.length})
           </Button>
         )}
 

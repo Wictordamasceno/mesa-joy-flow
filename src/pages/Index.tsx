@@ -237,7 +237,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
       quantity,
       selectedExtras: extras,
       selectedObservations: observations ? [observations] : [],
-      status: 'pending' as const,
+      status: 'preparing' as const,
     };
 
     let updatedComanda: Comanda | null = null;
