@@ -37,7 +37,8 @@ const App = () => {
   };
 
   if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    // Temporário: splash screen visível para edição
+    return <SplashScreen onComplete={() => {}} />;
   }
 
   if (!isAuthenticated) {
