@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Settings, User, Server, ChevronDown, ChevronUp } from "lucide-react";
+import comandaproIcon from "@/assets/comandapro-icon.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -34,8 +35,8 @@ export default function Login() {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-4 mb-12">
-          <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center">
-            <span className="text-4xl font-bold text-primary">D</span>
+          <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center p-4 border border-primary/30">
+            <img src={comandaproIcon} alt="ComandaPro" className="w-full h-full object-contain" />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">ComandaPro</h1>
