@@ -201,14 +201,26 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     const comandasToTransfer = selectedTable.comandas.filter(c => comandaIds.includes(c.id));
     const remainingComandas = selectedTable.comandas.filter(c => !comandaIds.includes(c.id));
 
+    // Renumerar as comandas transferidas para evitar duplicatas
+    const maxNumberInTarget = targetTable.comandas.reduce((max, c) => Math.max(max, c.number), 0);
     const updatedTargetComandas = [
       ...targetTable.comandas,
-      ...comandasToTransfer.map(c => ({ ...c, tableId: targetTableId }))
+      ...comandasToTransfer.map((c, index) => ({ 
+        ...c, 
+        tableId: targetTableId,
+        number: maxNumberInTarget + index + 1 // Novo número sequencial
+      }))
     ];
+
+    // Renumerar as comandas restantes na mesa de origem
+    const renumberedRemainingComandas = remainingComandas.map((c, index) => ({
+      ...c,
+      number: index + 1
+    }));
 
     setTables(prev => prev.map(t => {
       if (t.id === selectedTable.id) {
-        return { ...t, comandas: remainingComandas, status: remainingComandas.length === 0 ? 'available' : t.status, openedAt: remainingComandas.length === 0 ? undefined : t.openedAt };
+        return { ...t, comandas: renumberedRemainingComandas, status: renumberedRemainingComandas.length === 0 ? 'available' : t.status, openedAt: renumberedRemainingComandas.length === 0 ? undefined : t.openedAt };
       }
       if (t.id === targetTableId) {
         return { ...t, comandas: updatedTargetComandas, status: 'occupied', openedAt: t.openedAt || new Date() };
