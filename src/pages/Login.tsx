@@ -2,36 +2,37 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, User, Server, ChevronDown, ChevronUp } from "lucide-react";
+import { Settings, User, Server, ChevronDown, ChevronUp, Lock, Loader2 } from "lucide-react";
 import comandaproIcon from "@/assets/comandapro-icon.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
   const [hostUrl, setHostUrl] = useState(() => localStorage.getItem("hostUrl") || "");
   const [showSettings, setShowSettings] = useState(false);
-  const [error, setError] = useState("");
+  const { login, loading, error } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      setError("Por favor, insira seu nome");
-      return;
-    }
+    if (!name.trim()) return;
 
     // Save host URL if provided
     if (hostUrl.trim()) {
       localStorage.setItem("hostUrl", hostUrl.trim());
     }
 
-    // Save attendant name
-    localStorage.setItem("attendantName", name.trim());
-    navigate("/");
+    try {
+      await login(name.trim(), password);
+      navigate("/");
+    } catch {
+      // Error is handled by useAuth
+    }
   };
 
   return (
     <div className="min-h-dvh bg-background flex flex-col overflow-y-auto">
-      {/* Header */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-4 mb-12">
@@ -45,27 +46,50 @@ export default function Login() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
-              Nome do Atendente
+              Nome do Operador
             </label>
             <Input
               type="text"
               placeholder="Digite seu nome"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setError("");
-              }}
+              onChange={(e) => setName(e.target.value)}
               className="h-14 text-lg bg-card border-border"
+              disabled={loading}
             />
-            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
-          <Button type="submit" className="w-full h-14 text-lg" size="lg">
-            Entrar
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Lock className="w-4 h-4 text-primary" />
+              Senha
+            </label>
+            <Input
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-14 text-lg bg-card border-border"
+              disabled={loading}
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>
+          )}
+
+          <Button type="submit" className="w-full h-14 text-lg" size="lg" disabled={loading || !name.trim()}>
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Conectando...
+              </>
+            ) : (
+              "Entrar"
+            )}
           </Button>
         </form>
 
@@ -90,7 +114,7 @@ export default function Login() {
               </label>
               <Input
                 type="url"
-                placeholder="http://192.168.1.100:8080"
+                placeholder="http://192.168.1.100:8000"
                 value={hostUrl}
                 onChange={(e) => setHostUrl(e.target.value)}
                 className="h-12 bg-secondary/50 border-border"

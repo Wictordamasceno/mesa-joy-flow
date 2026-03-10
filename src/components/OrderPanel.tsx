@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Table, Order, MenuItem, OrderItem } from '@/types/restaurant';
-import { categories, menuItems } from '@/data/menuData';
+import { useProdutos } from '@/hooks/useProdutos';
 import { CategoryTabs } from './CategoryTabs';
 import { MenuItemCard } from './MenuItemCard';
 import { OrderItemRow } from './OrderItemRow';
 import { Button } from './ui/button';
-import { ArrowLeft, Send, Receipt, CheckCircle, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Send, Receipt, CheckCircle, ShoppingBag, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,11 +18,16 @@ interface OrderPanelProps {
 }
 
 export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable }: OrderPanelProps) {
-  const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [showOrder, setShowOrder] = useState(false);
   const { toast } = useToast();
 
-  const filteredItems = menuItems.filter((item) => item.category === activeCategory);
+  const cdcat = activeCategory !== 'all' ? Number(activeCategory) : undefined;
+  const { categories, products, isLoadingProducts } = useProdutos(cdcat);
+
+  const allCategories = useMemo(() => {
+    return [{ id: 'all', name: 'Todos', icon: '📋' }, ...categories];
+  }, [categories]);
 
   const currentOrder: Order = order || {
     id: `order-${table.id}-${Date.now()}`,
@@ -193,7 +198,6 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
 
       {/* Content */}
       {showOrder ? (
-        // Order view
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
             {currentOrder.items.length === 0 ? (
@@ -214,7 +218,6 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
             )}
           </div>
 
-          {/* Order actions */}
           <div className="p-4 border-t border-border bg-card space-y-3 safe-bottom">
             <div className="flex items-center justify-between">
               <span className="text-lg text-muted-foreground">Total</span>
@@ -224,36 +227,21 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
             </div>
 
             {hasPendingItems && (
-              <Button
-                variant="default"
-                size="touch"
-                onClick={sendToKitchen}
-                className="w-full"
-              >
+              <Button variant="default" size="touch" onClick={sendToKitchen} className="w-full">
                 <Send size={20} />
                 Enviar para Cozinha ({pendingItems.length})
               </Button>
             )}
 
             {currentOrder.items.length > 0 && currentOrder.status !== 'billing' && (
-              <Button
-                variant="warning"
-                size="touch"
-                onClick={requestBill}
-                className="w-full"
-              >
+              <Button variant="warning" size="touch" onClick={requestBill} className="w-full">
                 <Receipt size={20} />
                 Fechar Conta
               </Button>
             )}
 
             {currentOrder.status === 'billing' && (
-              <Button
-                variant="success"
-                size="touch"
-                onClick={closeTable}
-                className="w-full"
-              >
+              <Button variant="success" size="touch" onClick={closeTable} className="w-full">
                 <CheckCircle size={20} />
                 Finalizar e Liberar Mesa
               </Button>
@@ -261,39 +249,36 @@ export function OrderPanel({ table, order, onClose, onUpdateOrder, onUpdateTable
           </div>
         </div>
       ) : (
-        // Menu view
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Categories */}
           <div className="px-4 py-3 border-b border-border bg-card/50">
             <CategoryTabs
-              categories={categories}
+              categories={allCategories}
               activeCategory={activeCategory}
               onCategoryChange={setActiveCategory}
             />
           </div>
 
-          {/* Menu Items */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-            {filteredItems.map((item, index) => (
-              <div
-                key={item.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <MenuItemCard item={item} onAdd={addItem} />
+            {isLoadingProducts ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={32} className="animate-spin text-primary" />
               </div>
-            ))}
+            ) : (
+              products.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <MenuItemCard item={item} onAdd={addItem} />
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Quick order button when items exist */}
           {currentOrder.items.length > 0 && hasPendingItems && (
             <div className="p-4 border-t border-border bg-card safe-bottom">
-              <Button
-                variant="default"
-                size="touch"
-                onClick={sendToKitchen}
-                className="w-full"
-              >
+              <Button variant="default" size="touch" onClick={sendToKitchen} className="w-full">
                 <Send size={20} />
                 Enviar {pendingItems.length} {pendingItems.length === 1 ? 'item' : 'itens'} para Cozinha
               </Button>

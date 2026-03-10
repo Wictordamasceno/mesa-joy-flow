@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MenuItem, Extra } from '@/types/restaurant';
-import { categories, menuItems } from '@/data/menuData';
+import { useProdutos } from '@/hooks/useProdutos';
 import { CategoryTabs } from './CategoryTabs';
 import { MenuItemCard } from './MenuItemCard';
 import { ExtrasModal } from './ExtrasModal';
-import { X, Search } from 'lucide-react';
+import { X, Search, Loader2 } from 'lucide-react';
 
 interface MenuSearchModalProps {
   onClose: () => void;
@@ -12,20 +12,29 @@ interface MenuSearchModalProps {
 }
 
 export function MenuSearchModal({ onClose, onAddItem }: MenuSearchModalProps) {
-  const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
-  const filteredItems = menuItems.filter((item) => {
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    const matchesSearch = searchQuery === '' || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const cdcat = activeCategory !== 'all' ? Number(activeCategory) : undefined;
+  const { categories, products, isLoadingCategories, isLoadingProducts } = useProdutos(cdcat, searchQuery || undefined);
+
+  const allCategories = useMemo(() => {
+    return [{ id: 'all', name: 'Todos', icon: '📋' }, ...categories];
+  }, [categories]);
+
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return products;
+    const q = searchQuery.toLowerCase();
+    return products.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.description?.toLowerCase().includes(q)
+    );
+  }, [products, searchQuery]);
 
   const handleItemClick = (item: MenuItem) => {
-    if (item.extras?.length || item.observations?.length) {
+    if (item.extras?.length) {
       setSelectedItem(item);
     } else {
       onAddItem(item, [], '', 1);
@@ -71,16 +80,27 @@ export function MenuSearchModal({ onClose, onAddItem }: MenuSearchModalProps) {
 
       {/* Categories */}
       <div className="px-4 py-3 border-b border-border bg-card/50">
-        <CategoryTabs
-          categories={[{ id: 'all', name: 'Todos', icon: '📋' }, ...categories]}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+        {isLoadingCategories ? (
+          <div className="flex items-center justify-center py-2">
+            <Loader2 size={20} className="animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <CategoryTabs
+            categories={allCategories}
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        )}
       </div>
 
       {/* Items */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-        {filteredItems.length === 0 ? (
+        {isLoadingProducts ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 size={32} className="animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Carregando produtos...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Search size={48} className="opacity-30 mb-4" />
             <p>Nenhum produto encontrado</p>
