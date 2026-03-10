@@ -14,25 +14,28 @@ const queryClient = new QueryClient();
 // Wrapper component for Index to handle navigation
 const IndexWithLogout = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("authToken");
   const attendantName = localStorage.getItem("attendantName");
 
-  // Redirect to login if not logged in
   useEffect(() => {
-    if (!attendantName) {
+    if (!token) {
       navigate("/login");
     }
-  }, [attendantName, navigate]);
+  }, [token, navigate]);
 
   const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
     localStorage.removeItem("attendantName");
+    queryClient.clear();
     navigate("/login");
   };
 
-  if (!attendantName) {
+  if (!token) {
     return null;
   }
 
-  return <Index attendantName={attendantName} onLogout={handleLogout} />;
+  return <Index attendantName={attendantName || ""} onLogout={handleLogout} />;
 };
 
 const App = () => {
