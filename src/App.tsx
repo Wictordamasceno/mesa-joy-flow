@@ -38,16 +38,20 @@ const IndexWithLogout = () => {
   return <Index attendantName={attendantName || ""} onLogout={handleLogout} />;
 };
 
+let splashShown = false;
+
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(!splashShown);
 
   useEffect(() => {
+    if (!showSplash) return;
     const timer = setTimeout(() => {
+      splashShown = true;
       setShowSplash(false);
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [showSplash]);
 
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
