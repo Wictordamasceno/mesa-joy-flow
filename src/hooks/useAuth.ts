@@ -46,16 +46,16 @@ export function useAuth() {
 
       setAuth({ token: response.access_token, user, isAuthenticated: true });
       return response;
-    } catch (e: any) {
-      const msg = e instanceof ApiError
-        ? e.status === 401
-          ? "Nome ou senha incorretos."
-          : e.status === 403
-          ? "Operador bloqueado no sistema."
-          : e.status === 429
+    } catch (e: unknown) {
+      const apiError = e instanceof ApiError ? e : null;
+      const fallbackMessage = e instanceof Error ? e.message : "Erro ao fazer login.";
+      const msg = apiError
+        ? apiError.status === 429
           ? "Muitas tentativas. Aguarde um momento."
-          : e.message
-        : e.message || "Erro ao fazer login.";
+          : apiError.status === 403
+          ? "Operador bloqueado no sistema."
+          : apiError.message || fallbackMessage
+        : fallbackMessage;
       setError(msg);
       throw e;
     } finally {
