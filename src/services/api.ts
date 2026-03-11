@@ -56,10 +56,28 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   });
 
   if (res.status === 401) {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authUser");
-    window.location.href = "/login";
-    throw new ApiError(401, "Sessão expirada. Faça login novamente.");
+    let errorData: unknown = null;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = null;
+    }
+
+    const message =
+      (errorData as any)?.detail ||
+      (errorData as any)?.message ||
+      "Sessão expirada. Faça login novamente.";
+
+    if (path !== "/api/auth/login") {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUser");
+      localStorage.removeItem("attendantName");
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
+    }
+
+    throw new ApiError(401, message, errorData);
   }
 
   if (res.status === 429) {
