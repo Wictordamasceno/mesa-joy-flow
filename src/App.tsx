@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { SplashScreen } from "./components/SplashScreen";
+import { CapabilitiesProvider } from "./contexts/CapabilitiesContext";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +36,11 @@ const IndexWithLogout = () => {
     return null;
   }
 
-  return <Index attendantName={attendantName || ""} onLogout={handleLogout} />;
+  return (
+    <CapabilitiesProvider>
+      <Index attendantName={attendantName || ""} onLogout={handleLogout} />
+    </CapabilitiesProvider>
+  );
 };
 
 let splashShown = false;

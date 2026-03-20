@@ -1,4 +1,4 @@
-import type { Table, TableStatus, MenuItem, Extra, OrderItem, Category, Reservation } from "./restaurant";
+import type { Table, TableStatus, MenuItem, Extra, OrderItem, Category, Reservation, Comanda } from "./restaurant";
 import type {
   ApiMesa,
   ApiProduto,
@@ -6,6 +6,7 @@ import type {
   ApiItemPedido,
   ApiCategoria,
   ApiReserva,
+  ApiComanda,
 } from "@/services/api";
 
 // ============ Status Mappings ============
@@ -19,13 +20,18 @@ export function mapMesaStatus(status: "A" | "O" | "F"): TableStatus {
   }
 }
 
-export function mapProductionStatus(st: "P" | "E" | "R"): OrderItem["status"] {
+export function mapProductionStatus(st: "P" | "E" | "R" | "T"): OrderItem["status"] {
   switch (st) {
     case "P": return "pending";
     case "E": return "preparing";
     case "R": return "ready";
+    case "T": return "delivered";
     default: return "pending";
   }
+}
+
+export function mapComandaStatus(st: "A" | "F"): Comanda["status"] {
+  return st === "A" ? "open" : "closed";
 }
 
 // ============ Converters ============
@@ -77,6 +83,20 @@ export function apiItemToOrderItem(item: ApiItemPedido): OrderItem {
       : [],
     selectedObservations: item.obs ? [item.obs] : [],
     status: mapProductionStatus(item.stproducao),
+  };
+}
+
+export function apiComandaToComanda(apiComanda: ApiComanda, tableId: number, items: OrderItem[] = []): Comanda {
+  return {
+    id: `comanda-${apiComanda.numcomanda}`,
+    tableId,
+    number: apiComanda.numcomanda,
+    customerName: apiComanda.nome || undefined,
+    items,
+    status: mapComandaStatus(apiComanda.status),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    total: apiComanda.total,
   };
 }
 

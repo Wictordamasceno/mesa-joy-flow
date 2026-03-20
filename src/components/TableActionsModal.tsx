@@ -1,8 +1,9 @@
 import { Table } from '@/types/restaurant';
 import { Button } from './ui/button';
-import { X, DoorOpen, CalendarCheck, Users, ArrowRightLeft, Receipt } from 'lucide-react';
+import { X, DoorOpen, CalendarCheck, Users, ArrowRightLeft, Receipt, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isToday } from 'date-fns';
+import { useCapabilities } from '@/contexts/CapabilitiesContext';
 
 interface TableActionsModalProps {
   table: Table;
@@ -13,6 +14,7 @@ interface TableActionsModalProps {
   onManageComandas: () => void;
   onTransferComandas: () => void;
   onCloseTable: () => void;
+  onViewPedido?: () => void;
   onCancelReservation?: () => void;
 }
 
@@ -29,8 +31,10 @@ export function TableActionsModal({
   onManageComandas,
   onTransferComandas,
   onCloseTable,
+  onViewPedido,
   onCancelReservation,
 }: TableActionsModalProps) {
+  const { features, isModoComanda, isModoMesa } = useCapabilities();
   const todayReservation = getTodayReservation(table);
   const isReservedToday = !!todayReservation;
   const isOccupied = table.status === 'occupied' || table.status === 'billing';
@@ -50,7 +54,8 @@ export function TableActionsModal({
             <p className="text-sm text-muted-foreground">
               {isAvailable && 'Disponível para uso'}
               {isReservedToday && `Reservada - ${todayReservation.customerName} às ${todayReservation.time}`}
-              {isOccupied && `${table.comandas.filter(c => c.status !== 'closed').length} comanda(s) ativa(s)`}
+              {isOccupied && isModoComanda && `${table.comandas.filter(c => c.status !== 'closed').length} comanda(s) ativa(s)`}
+              {isOccupied && isModoMesa && 'Mesa em atendimento'}
             </p>
           </div>
           <button
@@ -110,18 +115,46 @@ export function TableActionsModal({
             </>
           )}
 
-          {/* Mesa ocupada */}
-          {isOccupied && (
+          {/* Mesa ocupada — Modo Mesa */}
+          {isOccupied && isModoMesa && (
             <>
               <Button
                 variant="default"
                 size="touch"
-                onClick={onAddComanda}
+                onClick={onViewPedido}
                 className="w-full justify-start gap-3"
               >
-                <Users size={22} />
-                Nova Comanda
+                <ShoppingBag size={22} />
+                Ver Pedido / Adicionar Itens
               </Button>
+              {features?.fechar_mesa_direto && (
+                <Button
+                  variant="warning"
+                  size="touch"
+                  onClick={onCloseTable}
+                  className="w-full justify-start gap-3"
+                >
+                  <Receipt size={22} />
+                  Fechar Mesa
+                </Button>
+              )}
+            </>
+          )}
+
+          {/* Mesa ocupada — Modo Comanda */}
+          {isOccupied && isModoComanda && (
+            <>
+              {features?.abrir_comanda && (
+                <Button
+                  variant="default"
+                  size="touch"
+                  onClick={onAddComanda}
+                  className="w-full justify-start gap-3"
+                >
+                  <Users size={22} />
+                  Nova Comanda
+                </Button>
+              )}
               {hasComandas && (
                 <>
                   <Button
@@ -133,27 +166,18 @@ export function TableActionsModal({
                     <Receipt size={22} />
                     Gerenciar Comandas
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="touch"
-                    onClick={onTransferComandas}
-                    className="w-full justify-start gap-3"
-                  >
-                    <ArrowRightLeft size={22} />
-                    Transferir Comandas
-                  </Button>
+                  {features?.transferir_comanda && (
+                    <Button
+                      variant="outline"
+                      size="touch"
+                      onClick={onTransferComandas}
+                      className="w-full justify-start gap-3"
+                    >
+                      <ArrowRightLeft size={22} />
+                      Transferir Comandas
+                    </Button>
+                  )}
                 </>
-              )}
-              {table.comandas.every(c => c.status === 'closed' || c.items.length === 0) && (
-                <Button
-                  variant="warning"
-                  size="touch"
-                  onClick={onCloseTable}
-                  className="w-full justify-start gap-3"
-                >
-                  <X size={22} />
-                  Fechar Mesa
-                </Button>
               )}
             </>
           )}

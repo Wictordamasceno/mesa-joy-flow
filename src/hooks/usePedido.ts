@@ -31,6 +31,7 @@ export function usePedido(mesaCodigo: number | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pedido", mesaCodigo] });
+      queryClient.invalidateQueries({ queryKey: ["comandas"] });
     },
   });
 
@@ -41,6 +42,7 @@ export function usePedido(mesaCodigo: number | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pedido", mesaCodigo] });
+      queryClient.invalidateQueries({ queryKey: ["comandas"] });
     },
   });
 
@@ -51,6 +53,7 @@ export function usePedido(mesaCodigo: number | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pedido", mesaCodigo] });
+      queryClient.invalidateQueries({ queryKey: ["comandas"] });
     },
   });
 

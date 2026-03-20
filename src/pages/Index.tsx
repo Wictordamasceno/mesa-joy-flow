@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useMesas } from '@/hooks/useMesas';
 import { usePedido } from '@/hooks/usePedido';
 import { useReservas } from '@/hooks/useReservas';
+import { useComandas } from '@/hooks/useComandas';
+import { useCapabilities } from '@/contexts/CapabilitiesContext';
 import { isToday, format } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { ApiError } from '@/services/api';
@@ -26,7 +28,8 @@ interface IndexProps {
 const Index = ({ attendantName, onLogout }: IndexProps) => {
   const { tables, isLoading: mesasLoading, abrirMesa, fecharMesa, liberarMesa, refetch: refetchMesas } = useMesas();
   const { reservations, createReserva, cancelReserva, convertReserva } = useReservas(format(new Date(), 'yyyy-MM-dd'));
-  
+  const { isModoComanda, isModoMesa, features } = useCapabilities();
+
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [activeFilter, setActiveFilter] = useState<TableStatus | 'all'>('all');
   const [showActions, setShowActions] = useState(false);
@@ -51,6 +54,12 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     ? selectedTable.number : null;
   const { pedido, items: pedidoItems, comandaItems, addItem: addPedidoItem, removeItem: removePedidoItem, updateItem: updatePedidoItem, refetch: refetchPedido } = usePedido(selectedMesaCodigo);
 
+  // Get comandas from API (only in comanda mode)
+  const { comandas: apiComandas, createComanda, fecharComanda, transferirComanda, refetch: refetchComandas } = useComandas(
+    isModoComanda ? pedido?.cdpedido ?? null : null,
+    selectedTable?.id ?? 0
+  );
+
   // Merge reservations into tables
   const tablesWithReservations = useMemo(() => {
     return tables.map(table => {
@@ -68,20 +77,40 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     });
   }, [tables, reservations]);
 
-  // Build comandas from pedido items
+  // Build table with comandas
   const selectedTableWithComandas = useMemo(() => {
     if (!selectedTable) return null;
     const table = tablesWithReservations.find(t => t.id === selectedTable.id);
     if (!table) return selectedTable;
 
-    if (!pedido) return { ...table, comandas: [] };
-
-    // Group items by numcomanda
-    const comandaNumbers = Object.keys(comandaItems).map(Number);
-    if (comandaNumbers.length === 0) {
-      // Create a single empty comanda
-      return { ...table, comandas: [] };
+    if (isModoComanda && apiComandas.length > 0) {
+      return { ...table, comandas: apiComandas };
     }
+
+    if (isModoMesa && pedido) {
+      // In mesa mode, create a virtual single "comanda" from all items
+      const items = pedidoItems;
+      const total = items.reduce((sum, i) => {
+        const extrasSum = i.selectedExtras?.reduce((s, e) => s + e.price, 0) || 0;
+        return sum + (i.menuItem.price + extrasSum) * i.quantity;
+      }, 0);
+      const virtualComanda: Comanda = {
+        id: 'pedido-direto',
+        tableId: table.id,
+        number: 0,
+        items,
+        status: 'open',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        total,
+      };
+      return { ...table, comandas: items.length > 0 ? [virtualComanda] : [] };
+    }
+
+    // Fallback: build from grouped items
+    if (!pedido) return { ...table, comandas: [] };
+    const comandaNumbers = Object.keys(comandaItems).map(Number);
+    if (comandaNumbers.length === 0) return { ...table, comandas: [] };
 
     const comandas: Comanda[] = comandaNumbers.map(num => {
       const items = comandaItems[num] || [];
@@ -102,7 +131,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     });
 
     return { ...table, comandas };
-  }, [selectedTable, tablesWithReservations, pedido, comandaItems]);
+  }, [selectedTable, tablesWithReservations, pedido, comandaItems, pedidoItems, apiComandas, isModoComanda, isModoMesa]);
 
   // Calculate display status considering today's reservations
   const getDisplayStatus = useCallback((table: Table): TableStatus => {
@@ -143,10 +172,38 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
       await refetchMesas();
       setShowActions(false);
       toast({ title: 'Mesa aberta!', description: `Mesa ${selectedTable.number}` });
-      // After opening, the comanda detail can be shown via pedido
-      setShowCreateComanda(true);
+
+      if (isModoComanda) {
+        setShowCreateComanda(true);
+      } else {
+        // Modo mesa: go directly to add items
+        handleViewPedido();
+      }
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+    }
+  };
+
+  const handleViewPedido = () => {
+    // Modo mesa: open menu directly to add items
+    setShowActions(false);
+    if (isModoMesa) {
+      // Create a virtual comanda for mesa mode
+      const virtualComanda: Comanda = {
+        id: 'pedido-direto',
+        tableId: selectedTable?.id ?? 0,
+        number: 0,
+        items: pedidoItems,
+        status: 'open',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        total: pedidoItems.reduce((sum, i) => {
+          const extrasSum = i.selectedExtras?.reduce((s, e) => s + e.price, 0) || 0;
+          return sum + (i.menuItem.price + extrasSum) * i.quantity;
+        }, 0),
+      };
+      setActiveComanda(virtualComanda);
+      setShowComandaDetail(true);
     }
   };
 
@@ -194,24 +251,31 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     setShowCreateComanda(true);
   };
 
-  const handleConfirmCreateComanda = (customerName?: string) => {
-    if (!selectedTableWithComandas) return;
-    const nextNumber = (selectedTableWithComandas.comandas?.length || 0) + 1;
-    const newComanda: Comanda = {
-      id: `comanda-${nextNumber}`,
-      tableId: selectedTableWithComandas.id,
-      number: nextNumber,
-      customerName,
-      items: [],
-      status: 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      total: 0,
-    };
-    setActiveComanda(newComanda);
-    setShowCreateComanda(false);
-    setShowComandaDetail(true);
-    toast({ title: 'Comanda criada!', description: `Comanda #${nextNumber}` });
+  const handleConfirmCreateComanda = async (customerName?: string) => {
+    if (!selectedTableWithComandas || !pedido) return;
+    try {
+      const result = await createComanda.mutateAsync({
+        nome: customerName,
+      });
+      await refetchComandas();
+      const newComanda: Comanda = {
+        id: `comanda-${result.numcomanda}`,
+        tableId: selectedTableWithComandas.id,
+        number: result.numcomanda,
+        customerName,
+        items: [],
+        status: 'open',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        total: 0,
+      };
+      setActiveComanda(newComanda);
+      setShowCreateComanda(false);
+      setShowComandaDetail(true);
+      toast({ title: 'Comanda criada!', description: `Comanda #${result.numcomanda}` });
+    } catch (e: any) {
+      toast({ title: 'Erro ao criar comanda', description: e.message, variant: 'destructive' });
+    }
   };
 
   const handleManageComandas = () => {
@@ -235,26 +299,57 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   };
 
   const handleRequestBill = async (comanda: Comanda) => {
-    if (!selectedTable || !authUser) return;
-    try {
-      await fecharMesa.mutateAsync({ codigo: selectedTable.number, cdvend: authUser.cdvend });
-      await refetchMesas();
-      toast({ title: 'Conta solicitada', description: `Mesa ${selectedTable.number}` });
-    } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+    if (!selectedTable || !pedido) return;
+
+    if (isModoComanda) {
+      // Fechar comanda individual via API
+      try {
+        const result = await fecharComanda.mutateAsync({ numcomanda: comanda.number });
+        await refetchComandas();
+        await refetchMesas();
+
+        if (result.mesa_liberada) {
+          toast({ title: 'Mesa liberada!', description: `Última comanda fechada. Mesa ${selectedTable.number} liberada.` });
+          setShowComandas(false);
+          setShowComandaDetail(false);
+          setSelectedTable(null);
+        } else {
+          toast({
+            title: 'Comanda fechada!',
+            description: `Comanda #${comanda.number}. ${result.comandas_abertas_restantes ?? 0} comanda(s) restante(s).`,
+          });
+        }
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      }
+    } else {
+      // Modo mesa: fechar mesa direto
+      try {
+        await fecharMesa.mutateAsync({ codigo: selectedTable.number, cdvend: authUser?.cdvend });
+        await refetchMesas();
+        toast({ title: 'Conta solicitada', description: `Mesa ${selectedTable.number}` });
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      }
     }
   };
 
   const handleCloseComanda = async (comanda: Comanda) => {
     if (!selectedTable) return;
-    try {
-      await liberarMesa.mutateAsync(selectedTable.number);
-      await refetchMesas();
-      setShowComandas(false);
-      setShowComandaDetail(false);
-      toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
-    } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+
+    if (isModoMesa) {
+      // Modo mesa: liberar mesa
+      try {
+        await liberarMesa.mutateAsync(selectedTable.number);
+        await refetchMesas();
+        setShowComandaDetail(false);
+        toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      }
+    } else {
+      // Modo comanda: fechar comanda individual
+      await handleRequestBill(comanda);
     }
   };
 
@@ -263,21 +358,50 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
     setShowTransfer(true);
   };
 
-  const handleConfirmTransfer = (comandaIds: string[], targetTableId: number) => {
-    // Transfer logic remains local as API doesn't support it
-    setShowTransfer(false);
-    toast({ title: 'Transferência', description: 'Funcionalidade não disponível na API do ERP.' });
+  const handleConfirmTransfer = async (numcomandas: number[], targetTableNumber: number) => {
+    if (!pedido) return;
+    try {
+      // Transfer each comanda sequentially
+      for (const numcomanda of numcomandas) {
+        await transferirComanda.mutateAsync({
+          numcomanda,
+          mesa_destino: targetTableNumber,
+        });
+      }
+      await refetchComandas();
+      await refetchMesas();
+      setShowTransfer(false);
+      toast({
+        title: 'Transferência concluída!',
+        description: `${numcomandas.length} comanda(s) transferida(s) para Mesa ${targetTableNumber}`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Erro na transferência', description: e.message, variant: 'destructive' });
+    }
   };
 
   const handleCloseTable = async () => {
-    if (!selectedTable) return;
-    try {
-      await liberarMesa.mutateAsync(selectedTable.number);
-      await refetchMesas();
-      setShowActions(false);
-      toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
-    } catch (e: any) {
-      toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+    if (!selectedTable || !authUser) return;
+
+    if (isModoMesa && features?.fechar_mesa_direto) {
+      try {
+        await fecharMesa.mutateAsync({ codigo: selectedTable.number, cdvend: authUser.cdvend });
+        await refetchMesas();
+        setShowActions(false);
+        toast({ title: 'Mesa fechada!', description: `Mesa ${selectedTable.number}` });
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      }
+    } else {
+      // Should not happen in comanda mode — mesa is auto-released
+      try {
+        await liberarMesa.mutateAsync(selectedTable.number);
+        await refetchMesas();
+        setShowActions(false);
+        toast({ title: 'Mesa liberada!', description: `Mesa ${selectedTable.number}` });
+      } catch (e: any) {
+        toast({ title: 'Erro', description: e.message, variant: 'destructive' });
+      }
     }
   };
 
@@ -293,9 +417,10 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
         cdopc: extra ? Number(extra.id) : undefined,
         obs_opcional: extra ? extra.name : undefined,
         vl_opcional: extra ? extra.price : undefined,
-        numcomanda: activeComanda.number,
+        numcomanda: isModoComanda ? activeComanda.number : undefined,
       });
       await refetchPedido();
+      if (isModoComanda) await refetchComandas();
       const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
       toast({ title: `+${quantity} ${item.name}`, description: `R$ ${((item.price + extrasTotal) * quantity).toFixed(2)}` });
     } catch (e: any) {
@@ -329,14 +454,15 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
       if (table) {
         setSelectedTable(table);
         setShowReservations(false);
-        // After converting, open the table
         if (authUser) {
           await abrirMesa.mutateAsync({
             codigo: table.number,
             data: { cdvend: authUser.cdvend },
           });
           await refetchMesas();
-          setShowCreateComanda(true);
+          if (isModoComanda) {
+            setShowCreateComanda(true);
+          }
         }
       }
     } catch (e: any) {
@@ -380,6 +506,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
           onManageComandas={handleManageComandas}
           onTransferComandas={handleTransferComandas}
           onCloseTable={handleCloseTable}
+          onViewPedido={handleViewPedido}
           onCancelReservation={handleCancelTodayReservation}
         />
       )}
@@ -404,15 +531,34 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
       )}
 
       {showCreateComanda && currentTable && (
-        <CreateComandaModal table={currentTable} nextNumber={(currentTable.comandas?.length || 0) + 1} onClose={() => setShowCreateComanda(false)} onConfirm={handleConfirmCreateComanda} />
+        <CreateComandaModal
+          table={currentTable}
+          nextNumber={(currentTable.comandas?.filter(c => c.status !== 'closed').length || 0) + 1}
+          onClose={() => setShowCreateComanda(false)}
+          onConfirm={handleConfirmCreateComanda}
+          isLoading={createComanda.isPending}
+        />
       )}
 
       {showComandas && currentTable && (
-        <ComandaSelector table={currentTable} onClose={() => setShowComandas(false)} onSelectComanda={handleSelectComanda} onCreateComanda={() => { setShowComandas(false); setShowCreateComanda(true); }} onRequestBill={handleRequestBill} onCloseComanda={handleCloseComanda} />
+        <ComandaSelector
+          table={currentTable}
+          onClose={() => setShowComandas(false)}
+          onSelectComanda={handleSelectComanda}
+          onCreateComanda={() => { setShowComandas(false); setShowCreateComanda(true); }}
+          onRequestBill={handleRequestBill}
+          onCloseComanda={handleCloseComanda}
+        />
       )}
 
       {showTransfer && currentTable && (
-        <TransferComandasModal sourceTable={currentTable} allTables={tablesWithReservations} onClose={() => setShowTransfer(false)} onTransfer={handleConfirmTransfer} />
+        <TransferComandasModal
+          sourceTable={currentTable}
+          allTables={tablesWithReservations}
+          onClose={() => setShowTransfer(false)}
+          onTransfer={handleConfirmTransfer}
+          isLoading={transferirComanda.isPending}
+        />
       )}
 
       {showComandaDetail && currentTable && activeComanda && (

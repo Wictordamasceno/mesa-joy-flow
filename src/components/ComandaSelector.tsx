@@ -12,14 +12,14 @@ interface ComandaSelectorProps {
   onCloseComanda: (comanda: Comanda) => void;
 }
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   open: 'Aberta',
   sent: 'Enviada',
   billing: 'Conta',
   closed: 'Fechada',
 };
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   open: 'bg-table-available/20 text-table-available',
   sent: 'bg-table-occupied/20 text-table-occupied',
   billing: 'bg-table-billing/20 text-table-billing',
@@ -57,7 +57,6 @@ export function ComandaSelector({
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
-          {/* Nova comanda */}
           <Button
             variant="default"
             size="touch"
@@ -68,7 +67,6 @@ export function ComandaSelector({
             Nova Comanda
           </Button>
 
-          {/* Comandas ativas */}
           {activeComandas.map((comanda) => (
             <div
               key={comanda.id}
@@ -91,9 +89,9 @@ export function ComandaSelector({
                 <div className="text-right">
                   <span className={cn(
                     'px-2 py-1 rounded-full text-xs font-semibold',
-                    statusColors[comanda.status]
+                    statusColors[comanda.status] || statusColors.open
                   )}>
-                    {statusLabels[comanda.status]}
+                    {statusLabels[comanda.status] || 'Aberta'}
                   </span>
                   <p className="text-sm font-bold text-primary mt-1">
                     R$ {comanda.total.toFixed(2)}
@@ -111,7 +109,7 @@ export function ComandaSelector({
                   <ArrowRight size={16} />
                   Acessar
                 </Button>
-                {comanda.status !== 'billing' && comanda.items.length > 0 && (
+                {comanda.items.length > 0 && (
                   <Button
                     variant="warning"
                     size="sm"
@@ -119,16 +117,6 @@ export function ComandaSelector({
                     className="gap-2"
                   >
                     <Receipt size={16} />
-                    Conta
-                  </Button>
-                )}
-                {comanda.status === 'billing' && (
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => onCloseComanda(comanda)}
-                    className="gap-2"
-                  >
                     Fechar
                   </Button>
                 )}
@@ -136,7 +124,6 @@ export function ComandaSelector({
             </div>
           ))}
 
-          {/* Comandas fechadas */}
           {closedComandas.length > 0 && (
             <div className="pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground mb-2 uppercase font-semibold">
@@ -149,6 +136,7 @@ export function ComandaSelector({
                 >
                   <span className="text-sm text-muted-foreground">
                     Comanda #{comanda.number}
+                    {comanda.customerName && ` - ${comanda.customerName}`}
                   </span>
                   <span className="text-sm font-medium text-muted-foreground">
                     R$ {comanda.total.toFixed(2)}
