@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Table } from '@/types/restaurant';
 import { Button } from './ui/button';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Loader2 } from 'lucide-react';
 
 interface CreateComandaModalProps {
   table: Table;
   nextNumber: number;
   onClose: () => void;
-  onConfirm: (customerName?: string) => void;
+  onConfirm: (customerName?: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: CreateComandaModalProps) {
+export function CreateComandaModal({ table, nextNumber, onClose, onConfirm, isLoading }: CreateComandaModalProps) {
   const [customerName, setCustomerName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Delay focus to allow modal animation to complete
   useEffect(() => {
     const timer = setTimeout(() => {
       inputRef.current?.focus();
@@ -23,8 +23,8 @@ export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: Cr
     return () => clearTimeout(timer);
   }, []);
 
-  const handleConfirm = () => {
-    onConfirm(customerName.trim() || undefined);
+  const handleConfirm = async () => {
+    await onConfirm(customerName.trim() || undefined);
   };
 
   return (
@@ -58,6 +58,7 @@ export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: Cr
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-secondary border-0 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-lg"
+              disabled={isLoading}
             />
           </div>
 
@@ -66,8 +67,9 @@ export function CreateComandaModal({ table, nextNumber, onClose, onConfirm }: Cr
             size="touch"
             onClick={handleConfirm}
             className="w-full gap-2"
+            disabled={isLoading}
           >
-            <Plus size={20} />
+            {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Plus size={20} />}
             Criar Comanda #{nextNumber}
           </Button>
         </div>

@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Table, Comanda } from '@/types/restaurant';
 import { Button } from './ui/button';
-import { X, ArrowRight, Check } from 'lucide-react';
+import { X, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TransferComandasModalProps {
   sourceTable: Table;
   allTables: Table[];
   onClose: () => void;
-  onTransfer: (comandaIds: string[], targetTableId: number) => void;
+  onTransfer: (numcomandas: number[], targetTableId: number) => Promise<void>;
+  isLoading?: boolean;
 }
 
 export function TransferComandasModal({
@@ -16,8 +17,9 @@ export function TransferComandasModal({
   allTables,
   onClose,
   onTransfer,
+  isLoading,
 }: TransferComandasModalProps) {
-  const [selectedComandas, setSelectedComandas] = useState<string[]>([]);
+  const [selectedComandas, setSelectedComandas] = useState<number[]>([]);
   const [selectedTargetTable, setSelectedTargetTable] = useState<number | null>(null);
 
   const activeComandas = sourceTable.comandas.filter(c => c.status !== 'closed');
@@ -25,15 +27,15 @@ export function TransferComandasModal({
     t => t.id !== sourceTable.id && (t.status === 'available' || t.status === 'occupied')
   );
 
-  const toggleComanda = (id: string) => {
+  const toggleComanda = (num: number) => {
     setSelectedComandas(prev =>
-      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+      prev.includes(num) ? prev.filter(c => c !== num) : [...prev, num]
     );
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     if (selectedComandas.length > 0 && selectedTargetTable) {
-      onTransfer(selectedComandas, selectedTargetTable);
+      await onTransfer(selectedComandas, selectedTargetTable);
     }
   };
 
@@ -57,7 +59,6 @@ export function TransferComandasModal({
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide">
-          {/* Seleção de comandas */}
           <div>
             <p className="text-sm font-semibold text-foreground mb-2">
               Selecione as comandas:
@@ -66,10 +67,10 @@ export function TransferComandasModal({
               {activeComandas.map((comanda) => (
                 <button
                   key={comanda.id}
-                  onClick={() => toggleComanda(comanda.id)}
+                  onClick={() => toggleComanda(comanda.number)}
                   className={cn(
                     'w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all touch-manipulation',
-                    selectedComandas.includes(comanda.id)
+                    selectedComandas.includes(comanda.number)
                       ? 'border-primary bg-primary/10'
                       : 'border-border bg-secondary/30'
                   )}
@@ -87,11 +88,11 @@ export function TransferComandasModal({
                   </div>
                   <div className={cn(
                     'w-6 h-6 rounded-full border-2 flex items-center justify-center',
-                    selectedComandas.includes(comanda.id)
+                    selectedComandas.includes(comanda.number)
                       ? 'border-primary bg-primary'
                       : 'border-muted-foreground'
                   )}>
-                    {selectedComandas.includes(comanda.id) && (
+                    {selectedComandas.includes(comanda.number) && (
                       <Check size={14} className="text-primary-foreground" />
                     )}
                   </div>
@@ -100,7 +101,6 @@ export function TransferComandasModal({
             </div>
           </div>
 
-          {/* Seleção de mesa destino */}
           {selectedComandas.length > 0 && (
             <div>
               <p className="text-sm font-semibold text-foreground mb-2">
@@ -110,10 +110,10 @@ export function TransferComandasModal({
                 {availableTables.map((table) => (
                   <button
                     key={table.id}
-                    onClick={() => setSelectedTargetTable(table.id)}
+                    onClick={() => setSelectedTargetTable(table.number)}
                     className={cn(
                       'aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all touch-manipulation',
-                      selectedTargetTable === table.id
+                      selectedTargetTable === table.number
                         ? 'border-primary bg-primary/20'
                         : 'border-border bg-secondary/30'
                     )}
@@ -129,7 +129,6 @@ export function TransferComandasModal({
           )}
         </div>
 
-        {/* Botão de transferir */}
         {selectedComandas.length > 0 && selectedTargetTable && (
           <div className="pt-4 mt-4 border-t border-border">
             <Button
@@ -137,9 +136,10 @@ export function TransferComandasModal({
               size="touch"
               onClick={handleTransfer}
               className="w-full gap-2"
+              disabled={isLoading}
             >
-              <ArrowRight size={20} />
-              Transferir {selectedComandas.length} comanda{selectedComandas.length > 1 ? 's' : ''} para Mesa {allTables.find(t => t.id === selectedTargetTable)?.number}
+              {isLoading ? <Loader2 size={20} className="animate-spin" /> : <ArrowRight size={20} />}
+              Transferir {selectedComandas.length} comanda{selectedComandas.length > 1 ? 's' : ''} para Mesa {selectedTargetTable}
             </Button>
           </div>
         )}
