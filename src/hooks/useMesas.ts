@@ -12,8 +12,8 @@ export function useMesas() {
       const mesas = await mesasApi.list();
       return mesas.map((m) => apiMesaToTable(m));
     },
-    refetchInterval: 10000, // Polling every 10s
-    staleTime: 5000,
+    refetchInterval: 30000, // Polling every 30s as per doc
+    staleTime: 10000,
   });
 
   const abrirMesa = useMutation({

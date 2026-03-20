@@ -152,6 +152,23 @@ export const licenseApi = {
   check: () => request<LicenseResponse>("/api/licenca/check"),
 };
 
+// ============ Capabilities ============
+
+export interface Capabilities {
+  modo_comanda: "mesa" | "comanda";
+  features: {
+    usar_comandas: boolean;
+    abrir_comanda: boolean;
+    fechar_comanda_individual: boolean;
+    transferir_comanda: boolean;
+    fechar_mesa_direto: boolean;
+  };
+}
+
+export const configApi = {
+  capabilities: () => request<Capabilities>("/api/config/capabilities"),
+};
+
 // ============ Mesas ============
 
 export interface ApiMesa {
@@ -201,7 +218,7 @@ export interface ApiItemPedido {
   obs_opcional: string | null;
   numcomanda: number;
   ordem: number;
-  stproducao: "P" | "E" | "R";
+  stproducao: "P" | "E" | "R" | "T";
 }
 
 export interface ApiPedido {
@@ -244,8 +261,64 @@ export const pedidosApi = {
     request<ApiItemPedido>(`/api/pedidos/${cdpedido}/itens/${itemId}`, { method: "PATCH", body: data }),
   removeItem: (cdpedido: number, itemId: number) =>
     request<void>(`/api/pedidos/${cdpedido}/itens/${itemId}`, { method: "DELETE" }),
-  getTotal: (cdpedido: number) =>
-    request<ApiPedidoTotal>(`/api/pedidos/${cdpedido}/total`),
+  getTotal: (cdpedido: number, numcomanda?: number) =>
+    request<ApiPedidoTotal>(`/api/pedidos/${cdpedido}/total`, {
+      params: numcomanda !== undefined ? { numcomanda } : undefined,
+    }),
+  getItems: (cdpedido: number, numcomanda?: number) =>
+    request<ApiItemPedido[]>(`/api/pedidos/${cdpedido}/itens`, {
+      params: numcomanda !== undefined ? { numcomanda } : undefined,
+    }),
+};
+
+// ============ Comandas ============
+
+export interface ApiComanda {
+  numcomanda: number;
+  nome: string | null;
+  pessoas: number | null;
+  status: "A" | "F";
+  total: number;
+}
+
+export interface CreateComandaRequest {
+  nome?: string;
+  pessoas?: number;
+}
+
+export interface CreateComandaResponse {
+  numcomanda: number;
+}
+
+export interface FecharComandaRequest {
+  numcomanda: number;
+}
+
+export interface FecharComandaResponse {
+  message: string;
+  mesa_liberada: boolean;
+  comandas_abertas_restantes?: number;
+}
+
+export interface TransferirComandaRequest {
+  numcomanda: number;
+  mesa_destino: number;
+}
+
+export interface TransferirComandaResponse {
+  message: string;
+  mesa_origem_liberada?: boolean;
+}
+
+export const comandasApi = {
+  list: (cdpedido: number) =>
+    request<ApiComanda[]>(`/api/pedidos/${cdpedido}/comandas`),
+  create: (cdpedido: number, data: CreateComandaRequest) =>
+    request<CreateComandaResponse>(`/api/pedidos/${cdpedido}/comandas`, { method: "POST", body: data }),
+  fechar: (cdpedido: number, data: FecharComandaRequest) =>
+    request<FecharComandaResponse>(`/api/pedidos/${cdpedido}/fechar-comanda`, { method: "POST", body: data }),
+  transferir: (cdpedido: number, data: TransferirComandaRequest) =>
+    request<TransferirComandaResponse>(`/api/pedidos/${cdpedido}/transferir-comanda`, { method: "POST", body: data }),
 };
 
 // ============ Produtos ============
