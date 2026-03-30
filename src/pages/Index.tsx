@@ -26,7 +26,7 @@ interface IndexProps {
 }
 
 const Index = ({ attendantName, onLogout }: IndexProps) => {
-  const { tables, isLoading: mesasLoading, abrirMesa, fecharMesa, liberarMesa, refetch: refetchMesas } = useMesas();
+  const { tables, isLoading: mesasLoading, abrirMesa, fecharMesa, liberarMesa, transferirMesa, refetch: refetchMesas } = useMesas();
   const { reservations, createReserva, cancelReserva, convertReserva } = useReservas(format(new Date(), 'yyyy-MM-dd'));
   const { isModoComanda, isModoMesa, features } = useCapabilities();
 
