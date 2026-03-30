@@ -55,7 +55,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   const { pedido, items: pedidoItems, comandaItems, addItem: addPedidoItem, removeItem: removePedidoItem, updateItem: updatePedidoItem, refetch: refetchPedido } = usePedido(selectedMesaCodigo);
 
   // Get comandas from API (only in comanda mode)
-  const { comandas: apiComandas, createComanda, fecharComanda, transferirComanda, refetch: refetchComandas } = useComandas(
+  const { comandas: apiComandas, createComanda, fecharComanda, refetch: refetchComandas } = useComandas(
     isModoComanda ? pedido?.cdpedido ?? null : null,
     selectedTable?.id ?? 0
   );
