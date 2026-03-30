@@ -169,15 +169,22 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
         codigo: selectedTable.number,
         data: { cdvend: authUser.cdvend },
       });
-      await refetchMesas();
+      const { data: refreshedTables } = await refetchMesas();
+      const updatedTable = refreshedTables?.find(t => t.id === selectedTable.id);
+      if (updatedTable) {
+        setSelectedTable(updatedTable);
+      } else {
+        // Fallback: update status locally
+        setSelectedTable({ ...selectedTable, status: 'occupied' });
+      }
       setShowActions(false);
       toast({ title: 'Mesa aberta!', description: `Mesa ${selectedTable.number}` });
 
       if (isModoComanda) {
         setShowCreateComanda(true);
       } else {
-        // Modo mesa: go directly to add items
-        handleViewPedido();
+        // Modo mesa: go directly to add items — defer to let state update
+        setTimeout(() => handleViewPedido(), 100);
       }
     } catch (e: any) {
       toast({ title: 'Erro', description: e.message, variant: 'destructive' });
