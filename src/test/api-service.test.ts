@@ -98,10 +98,23 @@ describe("comandasApi", () => {
     expect(result.mesa_liberada).toBe(true);
   });
 
-  it("transfers a comanda", async () => {
+  it("transfers a comanda via mesasApi", async () => {
+    // Import mesasApi
+    const { mesasApi } = await import("@/services/api");
     mockResponse({ message: "ok", mesa_origem_liberada: false });
-    const result = await comandasApi.transferir(100, { numcomanda: 1, mesa_destino: 5 });
+    const result = await mesasApi.transferir(5, { mesa_destino: 10, comandas: [1, 3] });
     expect(result.mesa_origem_liberada).toBe(false);
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/mesas/5/transferir",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("transfers whole mesa (no comandas array)", async () => {
+    const { mesasApi } = await import("@/services/api");
+    mockResponse({ message: "ok", mesa_origem_liberada: true });
+    const result = await mesasApi.transferir(5, { mesa_destino: 10 });
+    expect(result.mesa_origem_liberada).toBe(true);
   });
 });
 

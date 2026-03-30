@@ -3,6 +3,7 @@ import { Table, Comanda } from '@/types/restaurant';
 import { Button } from './ui/button';
 import { X, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCapabilities } from '@/contexts/CapabilitiesContext';
 
 interface TransferComandasModalProps {
   sourceTable: Table;
@@ -19,6 +20,7 @@ export function TransferComandasModal({
   onTransfer,
   isLoading,
 }: TransferComandasModalProps) {
+  const { isModoMesa, isModoComanda } = useCapabilities();
   const [selectedComandas, setSelectedComandas] = useState<number[]>([]);
   const [selectedTargetTable, setSelectedTargetTable] = useState<number | null>(null);
 
@@ -33,10 +35,13 @@ export function TransferComandasModal({
     );
   };
 
+  const canTransfer = isModoMesa
+    ? !!selectedTargetTable
+    : selectedComandas.length > 0 && !!selectedTargetTable;
+
   const handleTransfer = async () => {
-    if (selectedComandas.length > 0 && selectedTargetTable) {
-      await onTransfer(selectedComandas, selectedTargetTable);
-    }
+    if (!canTransfer || !selectedTargetTable) return;
+    await onTransfer(selectedComandas, selectedTargetTable);
   };
 
   return (
@@ -45,7 +50,9 @@ export function TransferComandasModal({
       <div className="relative w-full max-w-lg bg-card rounded-t-3xl p-6 pb-safe animate-slide-up max-h-[85dvh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Transferir Comandas</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              {isModoMesa ? 'Transferir Mesa' : 'Transferir Comandas'}
+            </h2>
             <p className="text-sm text-muted-foreground">
               Mesa {sourceTable.number}
             </p>
@@ -59,49 +66,62 @@ export function TransferComandasModal({
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide">
-          <div>
-            <p className="text-sm font-semibold text-foreground mb-2">
-              Selecione as comandas:
-            </p>
-            <div className="space-y-2">
-              {activeComandas.map((comanda) => (
-                <button
-                  key={comanda.id}
-                  onClick={() => toggleComanda(comanda.number)}
-                  className={cn(
-                    'w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all touch-manipulation',
-                    selectedComandas.includes(comanda.number)
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-secondary/30'
-                  )}
-                >
-                  <div className="text-left">
-                    <p className="font-semibold text-foreground">
-                      Comanda #{comanda.number}
-                    </p>
-                    {comanda.customerName && (
-                      <p className="text-xs text-muted-foreground">{comanda.customerName}</p>
-                    )}
-                    <p className="text-sm text-primary font-medium">
-                      R$ {comanda.total.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className={cn(
-                    'w-6 h-6 rounded-full border-2 flex items-center justify-center',
-                    selectedComandas.includes(comanda.number)
-                      ? 'border-primary bg-primary'
-                      : 'border-muted-foreground'
-                  )}>
-                    {selectedComandas.includes(comanda.number) && (
-                      <Check size={14} className="text-primary-foreground" />
-                    )}
-                  </div>
-                </button>
-              ))}
+          {/* In mesa mode, skip comanda selection — transfer whole pedido */}
+          {isModoMesa && (
+            <div className="p-3 rounded-xl bg-secondary/30 border border-border">
+              <p className="text-sm text-muted-foreground">
+                Todo o pedido da Mesa {sourceTable.number} será transferido para a mesa de destino.
+              </p>
             </div>
-          </div>
+          )}
 
-          {selectedComandas.length > 0 && (
+          {/* In comanda mode, show comanda selection */}
+          {isModoComanda && (
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-2">
+                Selecione as comandas:
+              </p>
+              <div className="space-y-2">
+                {activeComandas.map((comanda) => (
+                  <button
+                    key={comanda.id}
+                    onClick={() => toggleComanda(comanda.number)}
+                    className={cn(
+                      'w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all touch-manipulation',
+                      selectedComandas.includes(comanda.number)
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border bg-secondary/30'
+                    )}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-foreground">
+                        Comanda #{comanda.number}
+                      </p>
+                      {comanda.customerName && (
+                        <p className="text-xs text-muted-foreground">{comanda.customerName}</p>
+                      )}
+                      <p className="text-sm text-primary font-medium">
+                        R$ {comanda.total.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className={cn(
+                      'w-6 h-6 rounded-full border-2 flex items-center justify-center',
+                      selectedComandas.includes(comanda.number)
+                        ? 'border-primary bg-primary'
+                        : 'border-muted-foreground'
+                    )}>
+                      {selectedComandas.includes(comanda.number) && (
+                        <Check size={14} className="text-primary-foreground" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Show target table selection */}
+          {(isModoMesa || selectedComandas.length > 0) && (
             <div>
               <p className="text-sm font-semibold text-foreground mb-2">
                 Mesa de destino:
@@ -129,7 +149,7 @@ export function TransferComandasModal({
           )}
         </div>
 
-        {selectedComandas.length > 0 && selectedTargetTable && (
+        {canTransfer && (
           <div className="pt-4 mt-4 border-t border-border">
             <Button
               variant="default"
@@ -139,7 +159,10 @@ export function TransferComandasModal({
               disabled={isLoading}
             >
               {isLoading ? <Loader2 size={20} className="animate-spin" /> : <ArrowRight size={20} />}
-              Transferir {selectedComandas.length} comanda{selectedComandas.length > 1 ? 's' : ''} para Mesa {selectedTargetTable}
+              {isModoMesa
+                ? `Transferir pedido para Mesa ${selectedTargetTable}`
+                : `Transferir ${selectedComandas.length} comanda${selectedComandas.length > 1 ? 's' : ''} para Mesa ${selectedTargetTable}`
+              }
             </Button>
           </div>
         )}

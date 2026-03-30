@@ -366,22 +366,26 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   };
 
   const handleConfirmTransfer = async (numcomandas: number[], targetTableNumber: number) => {
-    if (!pedido) return;
+    if (!selectedTable) return;
     try {
-      // Transfer each comanda sequentially
-      for (const numcomanda of numcomandas) {
-        await transferirComanda.mutateAsync({
-          numcomanda,
-          mesa_destino: targetTableNumber,
-        });
+      const data: { mesa_destino: number; comandas?: number[] } = {
+        mesa_destino: targetTableNumber,
+      };
+      // In comanda mode, send the array of comandas; in mesa mode, omit it to transfer everything
+      if (isModoComanda && numcomandas.length > 0) {
+        data.comandas = numcomandas;
       }
-      await refetchComandas();
+      await transferirMesa.mutateAsync({
+        codigo: selectedTable.number,
+        data,
+      });
+      if (isModoComanda) await refetchComandas();
       await refetchMesas();
       setShowTransfer(false);
-      toast({
-        title: 'Transferência concluída!',
-        description: `${numcomandas.length} comanda(s) transferida(s) para Mesa ${targetTableNumber}`,
-      });
+      const desc = isModoComanda
+        ? `${numcomandas.length} comanda(s) transferida(s) para Mesa ${targetTableNumber}`
+        : `Pedido transferido para Mesa ${targetTableNumber}`;
+      toast({ title: 'Transferência concluída!', description: desc });
     } catch (e: any) {
       toast({ title: 'Erro na transferência', description: e.message, variant: 'destructive' });
     }

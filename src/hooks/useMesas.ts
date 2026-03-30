@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { mesasApi, type AbrirMesaRequest } from "@/services/api";
+import { mesasApi, type AbrirMesaRequest, type TransferirMesaRequest } from "@/services/api";
 import { apiMesaToTable } from "@/types/api";
 import type { Table } from "@/types/restaurant";
 
@@ -12,7 +12,7 @@ export function useMesas() {
       const mesas = await mesasApi.list();
       return mesas.map((m) => apiMesaToTable(m));
     },
-    refetchInterval: 30000, // Polling every 30s as per doc
+    refetchInterval: 30000,
     staleTime: 10000,
   });
 
@@ -33,6 +33,15 @@ export function useMesas() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["mesas"] }),
   });
 
+  const transferirMesa = useMutation({
+    mutationFn: ({ codigo, data }: { codigo: number; data: TransferirMesaRequest }) =>
+      mesasApi.transferir(codigo, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["mesas"] });
+      queryClient.invalidateQueries({ queryKey: ["comandas"] });
+    },
+  });
+
   return {
     tables: query.data || [],
     isLoading: query.isLoading,
@@ -41,5 +50,6 @@ export function useMesas() {
     abrirMesa,
     fecharMesa,
     liberarMesa,
+    transferirMesa,
   };
 }
