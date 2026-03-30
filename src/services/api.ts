@@ -193,6 +193,16 @@ export interface AbrirMesaResponse {
   cdpedido: number;
 }
 
+export interface TransferirMesaRequest {
+  mesa_destino: number;
+  comandas?: number[];
+}
+
+export interface TransferirMesaResponse {
+  message: string;
+  mesa_origem_liberada?: boolean;
+}
+
 export const mesasApi = {
   list: () => request<ApiMesa[]>("/api/mesas/"),
   get: (codigo: number) => request<ApiMesa>(`/api/mesas/${codigo}`),
@@ -202,6 +212,8 @@ export const mesasApi = {
     request<{ message: string }>(`/api/mesas/${codigo}/fechar`, { method: "POST", body: data }),
   liberar: (codigo: number) =>
     request<{ message: string }>(`/api/mesas/${codigo}/liberar`, { method: "POST" }),
+  transferir: (codigo: number, data: TransferirMesaRequest) =>
+    request<TransferirMesaResponse>(`/api/mesas/${codigo}/transferir`, { method: "POST", body: data }),
 };
 
 // ============ Pedidos ============
