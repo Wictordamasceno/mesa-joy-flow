@@ -312,16 +312,6 @@ export interface FecharComandaResponse {
   comandas_abertas_restantes?: number;
 }
 
-export interface TransferirComandaRequest {
-  numcomanda: number;
-  mesa_destino: number;
-}
-
-export interface TransferirComandaResponse {
-  message: string;
-  mesa_origem_liberada?: boolean;
-}
-
 export const comandasApi = {
   list: (cdpedido: number) =>
     request<ApiComanda[]>(`/api/pedidos/${cdpedido}/comandas`),
@@ -329,8 +319,6 @@ export const comandasApi = {
     request<CreateComandaResponse>(`/api/pedidos/${cdpedido}/comandas`, { method: "POST", body: data }),
   fechar: (cdpedido: number, data: FecharComandaRequest) =>
     request<FecharComandaResponse>(`/api/pedidos/${cdpedido}/fechar-comanda`, { method: "POST", body: data }),
-  transferir: (cdpedido: number, data: TransferirComandaRequest) =>
-    request<TransferirComandaResponse>(`/api/pedidos/${cdpedido}/transferir-comanda`, { method: "POST", body: data }),
 };
 
 // ============ Produtos ============
