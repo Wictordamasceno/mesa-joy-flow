@@ -568,7 +568,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
           allTables={tablesWithReservations}
           onClose={() => setShowTransfer(false)}
           onTransfer={handleConfirmTransfer}
-          isLoading={transferirComanda.isPending}
+          isLoading={transferirMesa.isPending}
         />
       )}
 
