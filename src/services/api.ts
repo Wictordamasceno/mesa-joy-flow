@@ -193,6 +193,16 @@ export interface AbrirMesaResponse {
   cdpedido: number;
 }
 
+export interface TransferirMesaRequest {
+  mesa_destino: number;
+  comandas?: number[];
+}
+
+export interface TransferirMesaResponse {
+  message: string;
+  mesa_origem_liberada?: boolean;
+}
+
 export const mesasApi = {
   list: () => request<ApiMesa[]>("/api/mesas/"),
   get: (codigo: number) => request<ApiMesa>(`/api/mesas/${codigo}`),
@@ -202,6 +212,8 @@ export const mesasApi = {
     request<{ message: string }>(`/api/mesas/${codigo}/fechar`, { method: "POST", body: data }),
   liberar: (codigo: number) =>
     request<{ message: string }>(`/api/mesas/${codigo}/liberar`, { method: "POST" }),
+  transferir: (codigo: number, data: TransferirMesaRequest) =>
+    request<TransferirMesaResponse>(`/api/mesas/${codigo}/transferir`, { method: "POST", body: data }),
 };
 
 // ============ Pedidos ============
@@ -300,16 +312,6 @@ export interface FecharComandaResponse {
   comandas_abertas_restantes?: number;
 }
 
-export interface TransferirComandaRequest {
-  numcomanda: number;
-  mesa_destino: number;
-}
-
-export interface TransferirComandaResponse {
-  message: string;
-  mesa_origem_liberada?: boolean;
-}
-
 export const comandasApi = {
   list: (cdpedido: number) =>
     request<ApiComanda[]>(`/api/pedidos/${cdpedido}/comandas`),
@@ -317,8 +319,6 @@ export const comandasApi = {
     request<CreateComandaResponse>(`/api/pedidos/${cdpedido}/comandas`, { method: "POST", body: data }),
   fechar: (cdpedido: number, data: FecharComandaRequest) =>
     request<FecharComandaResponse>(`/api/pedidos/${cdpedido}/fechar-comanda`, { method: "POST", body: data }),
-  transferir: (cdpedido: number, data: TransferirComandaRequest) =>
-    request<TransferirComandaResponse>(`/api/pedidos/${cdpedido}/transferir-comanda`, { method: "POST", body: data }),
 };
 
 // ============ Produtos ============

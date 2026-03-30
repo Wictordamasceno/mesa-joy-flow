@@ -127,6 +127,15 @@ export function TableActionsModal({
                 <ShoppingBag size={22} />
                 Ver Pedido / Adicionar Itens
               </Button>
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={onTransferComandas}
+                className="w-full justify-start gap-3"
+              >
+                <ArrowRightLeft size={22} />
+                Transferir Mesa
+              </Button>
               {features?.fechar_mesa_direto && (
                 <Button
                   variant="warning"

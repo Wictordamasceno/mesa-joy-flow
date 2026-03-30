@@ -26,7 +26,7 @@ interface IndexProps {
 }
 
 const Index = ({ attendantName, onLogout }: IndexProps) => {
-  const { tables, isLoading: mesasLoading, abrirMesa, fecharMesa, liberarMesa, refetch: refetchMesas } = useMesas();
+  const { tables, isLoading: mesasLoading, abrirMesa, fecharMesa, liberarMesa, transferirMesa, refetch: refetchMesas } = useMesas();
   const { reservations, createReserva, cancelReserva, convertReserva } = useReservas(format(new Date(), 'yyyy-MM-dd'));
   const { isModoComanda, isModoMesa, features } = useCapabilities();
 
@@ -55,7 +55,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   const { pedido, items: pedidoItems, comandaItems, addItem: addPedidoItem, removeItem: removePedidoItem, updateItem: updatePedidoItem, refetch: refetchPedido } = usePedido(selectedMesaCodigo);
 
   // Get comandas from API (only in comanda mode)
-  const { comandas: apiComandas, createComanda, fecharComanda, transferirComanda, refetch: refetchComandas } = useComandas(
+  const { comandas: apiComandas, createComanda, fecharComanda, refetch: refetchComandas } = useComandas(
     isModoComanda ? pedido?.cdpedido ?? null : null,
     selectedTable?.id ?? 0
   );
@@ -366,22 +366,26 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
   };
 
   const handleConfirmTransfer = async (numcomandas: number[], targetTableNumber: number) => {
-    if (!pedido) return;
+    if (!selectedTable) return;
     try {
-      // Transfer each comanda sequentially
-      for (const numcomanda of numcomandas) {
-        await transferirComanda.mutateAsync({
-          numcomanda,
-          mesa_destino: targetTableNumber,
-        });
+      const data: { mesa_destino: number; comandas?: number[] } = {
+        mesa_destino: targetTableNumber,
+      };
+      // In comanda mode, send the array of comandas; in mesa mode, omit it to transfer everything
+      if (isModoComanda && numcomandas.length > 0) {
+        data.comandas = numcomandas;
       }
-      await refetchComandas();
+      await transferirMesa.mutateAsync({
+        codigo: selectedTable.number,
+        data,
+      });
+      if (isModoComanda) await refetchComandas();
       await refetchMesas();
       setShowTransfer(false);
-      toast({
-        title: 'Transferência concluída!',
-        description: `${numcomandas.length} comanda(s) transferida(s) para Mesa ${targetTableNumber}`,
-      });
+      const desc = isModoComanda
+        ? `${numcomandas.length} comanda(s) transferida(s) para Mesa ${targetTableNumber}`
+        : `Pedido transferido para Mesa ${targetTableNumber}`;
+      toast({ title: 'Transferência concluída!', description: desc });
     } catch (e: any) {
       toast({ title: 'Erro na transferência', description: e.message, variant: 'destructive' });
     }
@@ -564,7 +568,7 @@ const Index = ({ attendantName, onLogout }: IndexProps) => {
           allTables={tablesWithReservations}
           onClose={() => setShowTransfer(false)}
           onTransfer={handleConfirmTransfer}
-          isLoading={transferirComanda.isPending}
+          isLoading={transferirMesa.isPending}
         />
       )}
 
